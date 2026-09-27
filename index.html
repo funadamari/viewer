@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=5.0,
+               user-scalable=yes,
+               viewport-fit=cover">
+
+<title>ふなだまり写真</title>
+
+<style>
+/* =========================================================
+   基本設定
+   ========================================================= */
+
+:root {
+    --ui-size: 44px;
+    --ui-gap: 10px;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: #000;
+
+    overflow: hidden;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+/*
+ * 100dvh:
+ * iPhoneなどのブラウザUIの変化を考慮した高さ
+ */
+#viewer {
+    position: fixed;
+
+    left: 0;
+    top: 0;
+
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+
+    background: #000;
+
+    overflow: hidden;
+
+    touch-action: none;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+
+/* =========================================================
+   写真
+   ========================================================= */
+
+#image {
+    position: absolute;
+
+    display: block;
+
+    max-width: none;
+    max-height: none;
+
+    margin: 0;
+    padding: 0;
+
+    transform-origin: center center;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+
+    cursor: grab;
+
+    touch-action: none;
+
+    will-change: transform;
+}
+
+#image.dragging {
+    cursor: grabbing;
+}
+
+
+/* =========================================================
+   上部タイトル
+   ========================================================= */
+
+#title {
+    position: fixed;
+
+    left: 50%;
+    top: env(safe-area-inset-top, 0px);
+
+    transform: translateX(-50%);
+
+    max-width: calc(100vw - 160px);
+
+    padding: 10px 16px;
+
+    color: #fff;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    border-radius: 0 0 10px 10px;
+
+    font-size: 14px;
+
+    text-align: center;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    z-index: 20;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   ボタン共通
+   ========================================================= */
+
+button {
+    width: var(--ui-size);
+    height: var(--ui-size);
+
+    padding: 0;
+
+    border: 0;
+
+    border-radius: 50%;
+
+    background: rgba(30, 30, 30, 0.65);
+
+    color: #fff;
+
+    font-size: 23px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    z-index: 30;
+}
+
+button:active {
+    background: rgba(100, 100, 100, 0.8);
+}
+
+
+/* =========================================================
+   閉じるボタン
+   ========================================================= */
+
+#closeButton {
+    position: fixed;
+
+    right: 14px;
+
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+}
+
+
+/* =========================================================
+   操作ボタン
+   ========================================================= */
+
+#controls {
+    position: fixed;
+
+    left: 50%;
+
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+
+    transform: translateX(-50%);
+
+    display: flex;
+
+    gap: var(--ui-gap);
+
+    padding: 8px 10px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    border-radius: 28px;
+
+    z-index: 30;
+
+    transition: opacity 0.25s;
+}
+
+
+/* =========================================================
+   読み込み表示
+   ========================================================= */
+
+#loading {
+    position: fixed;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    color: #fff;
+
+    font-size: 16px;
+
+    z-index: 10;
+}
+
+
+/* =========================================================
+   エラー表示
+   ========================================================= */
+
+#error {
+    display: none;
+
+    position: fixed;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: min(80vw, 500px);
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    color: #fff;
+
+    background: rgba(180, 0, 0, 0.8);
+
+    border-radius: 10px;
+
+    text-align: center;
+
+    line-height: 1.6;
+
+    z-index: 40;
+}
+
+
+/* =========================================================
+   UIを一時的に隠す
+   ========================================================= */
+
+.ui-hidden #controls,
+.ui-hidden #title,
+.ui-hidden #closeButton {
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   PCでのホバー
+   ========================================================= */
+
+@media (hover: hover) {
+
+    button:hover {
+        background: rgba(80, 80, 80, 0.8);
+    }
+
+}
+</style>
+</head>
+
+
+<body>
+
+<div id="viewer">
+
+    <div id="loading">
+        写真を読み込んでいます…
+    </div>
+
+    <div id="error"></div>
+
+    <img
+        id="image"
+        alt="ふなだまりの写真"
+        draggable="false"
+        referrerpolicy="no-referrer"
+    >
+
+</div>
+
+
+<!-- 閉じる -->
+<button id="closeButton"
+        aria-label="閉じる"
+        title="閉じる">
+    ×
+</button>
+
+
+<!-- 操作ボタン -->
+<div id="controls">
+
+    <button id="zoomOut"
+            aria-label="縮小"
+            title="縮小">
+        −
+    </button>
+
+    <button id="zoomIn"
+            aria-label="拡大"
+            title="拡大">
+        ＋
+    </button>
+
+    <button id="reset"
+            aria-label="元の表示"
+            title="元の表示">
+        ↺
+    </button>
+
+    <button id="fullscreen"
+            aria-label="全画面"
+            title="全画面">
+        ⛶
+    </button>
+
+</div>
+
+
+<script>
+/* =========================================================
+   URLから画像情報を取得
+   ========================================================= */
+
+const params = new URLSearchParams(window.location.search);
+
+const imageURL = params.get("image");
+const imageTitle = params.get("title");
+
+const image = document.getElementById("image");
+const viewer = document.getElementById("viewer");
+
+const loading = document.getElementById("loading");
+const errorBox = document.getElementById("error");
+
+const titleBox = document.getElementById("title");
+
+
+/* =========================================================
+   タイトル表示
+   ========================================================= */
+
+if (imageTitle) {
+
+    const decodedTitle = imageTitle;
+
+    const titleElement = document.createElement("div");
+
+    titleElement.id = "title";
+
+    titleElement.textContent = decodedTitle;
+
+    document.body.appendChild(titleElement);
+
+}
+
+
+/* =========================================================
+   URLチェック
+   ========================================================= */
+
+function isValidImageURL(url) {
+
+    if (!url) {
+        return false;
+    }
+
+    try {
+
+        const parsed = new URL(url);
+
+        /*
+         * HTTP/HTTPSのみ許可
+         */
+        if (
+            parsed.protocol !== "https:" &&
+            parsed.protocol !== "http:"
+        ) {
+            return false;
+        }
+
+        return true;
+
+    } catch (e) {
+
+        return false;
+    }
+}
+
+
+/* =========================================================
+   画像URLがない場合
+   ========================================================= */
+
+if (!isValidImageURL(imageURL)) {
+
+    loading.style.display = "none";
+
+    errorBox.style.display = "block";
+
+    errorBox.textContent =
+        "画像が指定されていません。";
+
+} else {
+
+    image.src = imageURL;
+
+}
+
+
+/* =========================================================
+   変数
+   ========================================================= */
+
+let fitScale = 1;
+
+let scale = 1;
+
+let translateX = 0;
+let translateY = 0;
+
+const MIN_SCALE = 1;
+const MAX_SCALE = 5;
+
+
+/* =========================================================
+   写真を画面内にフィット
+   ========================================================= */
+
+function calculateFitScale() {
+
+    if (!image.naturalWidth || !image.naturalHeight) {
+        return 1;
+    }
+
+    const vw = viewer.clientWidth;
+    const vh = viewer.clientHeight;
+
+    /*
+     * 画面いっぱいを使う。
+     * ただし写真は切り取らない。
+     */
+    const scaleX =
+        vw / image.naturalWidth;
+
+    const scaleY =
+        vh / image.naturalHeight;
+
+    return Math.min(scaleX, scaleY);
+}
+
+
+/* =========================================================
+   表示更新
+   ========================================================= */
+
+function updateTransform() {
+
+    image.style.transform =
+        "translate(" +
+        translateX +
+        "px, " +
+        translateY +
+        "px) " +
+        "scale(" +
+        (fitScale * scale) +
+        ")";
+}
+
+
+/* =========================================================
+   初期表示
+   ========================================================= */
+
+function resetView() {
+
+    fitScale = calculateFitScale();
+
+    scale = 1;
+
+    translateX = 0;
+    translateY = 0;
+
+    updateTransform();
+}
+
+
+/* =========================================================
+   画像読み込み完了
+   ========================================================= */
+
+image.addEventListener(
+    "load",
+    function() {
+
+        loading.style.display = "none";
+
+        resetView();
+
+    }
+);
+
+
+/* =========================================================
+   画像読み込みエラー
+   ========================================================= */
+
+image.addEventListener(
+    "error",
+    function() {
+
+        loading.style.display = "none";
+
+        errorBox.style.display = "block";
+
+        errorBox.textContent =
+            "写真を読み込めませんでした。\n\n" +
+            "画像URLを確認してください。";
+
+    }
+);
+
+
+/* =========================================================
+   ウィンドウサイズ変更
+   ========================================================= */
+
+window.addEventListener(
+    "resize",
+    function() {
+
+        if (scale === 1) {
+            resetView();
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ズーム
+   ========================================================= */
+
+function setScale(newScale, centerX, centerY) {
+
+    const oldScale = scale;
+
+    scale =
+        Math.min(
+            Math.max(newScale, MIN_SCALE),
+            MAX_SCALE
+        );
+
+    /*
+     * 1倍に戻った場合は中央へ戻す
+     */
+    if (scale === 1) {
+
+        translateX = 0;
+        translateY = 0;
+
+    } else if (centerX !== undefined) {
+
+        /*
+         * ズーム中心をなるべく維持する
+         */
+
+        const ratio =
+            (scale / oldScale) - 1;
+
+        translateX -=
+            (centerX - viewer.clientWidth / 2)
+            * ratio;
+
+        translateY -=
+            (centerY - viewer.clientHeight / 2)
+            * ratio;
+    }
+
+    updateTransform();
+}
+
+
+/* =========================================================
+   ズームボタン
+   ========================================================= */
+
+document.getElementById("zoomIn")
+.addEventListener(
+    "click",
+    function() {
+
+        setScale(
+            scale * 1.5,
+            viewer.clientWidth / 2,
+            viewer.clientHeight / 2
+        );
+
+    }
+);
+
+
+document.getElementById("zoomOut")
+.addEventListener(
+    "click",
+    function() {
+
+        setScale(
+            scale / 1.5,
+            viewer.clientWidth / 2,
+            viewer.clientHeight / 2
+        );
+
+    }
+);
+
+
+document.getElementById("reset")
+.addEventListener(
+    "click",
+    function() {
+
+        resetView();
+
+    }
+);
+
+
+/* =========================================================
+   タッチ・マウス操作
+   ========================================================= */
+
+const pointers = new Map();
+
+let lastPinchDistance = null;
+
+let lastTapTime = 0;
+
+
+/* ---------------------------------------------------------
+   Pointer Down
+   --------------------------------------------------------- */
+
+viewer.addEventListener(
+    "pointerdown",
+    function(e) {
+
+        /*
+         * ボタン上での操作は除外
+         */
+        if (
+            e.target.tagName === "BUTTON"
+        ) {
+            return;
+        }
+
+        viewer.setPointerCapture(e.pointerId);
+
+        pointers.set(
+            e.pointerId,
+            {
+                x: e.clientX,
+                y: e.clientY
+            }
+        );
+
+        image.classList.add("dragging");
+
+        /*
+         * 2本指になった
+         */
+        if (pointers.size === 2) {
+
+            lastPinchDistance =
+                getPointerDistance();
+
+        }
+
+    }
+);
+
+
+/* ---------------------------------------------------------
+   Pointer Move
+   --------------------------------------------------------- */
+
+viewer.addEventListener(
+    "pointermove",
+    function(e) {
+
+        if (!pointers.has(e.pointerId)) {
+            return;
+        }
+
+        const old =
+            pointers.get(e.pointerId);
+
+        const dx =
+            e.clientX - old.x;
+
+        const dy =
+            e.clientY - old.y;
+
+        pointers.set(
+            e.pointerId,
+            {
+                x: e.clientX,
+                y: e.clientY
+            }
+        );
+
+
+        /*
+         * 2本指 → ピンチズーム
+         */
+        if (pointers.size === 2) {
+
+            e.preventDefault();
+
+            const distance =
+                getPointerDistance();
+
+            if (lastPinchDistance !== null) {
+
+                const ratio =
+                    distance /
+                    lastPinchDistance;
+
+                setScale(
+                    scale * ratio
+                );
+            }
+
+            lastPinchDistance = distance;
+
+            return;
+        }
+
+
+        /*
+         * 1本指 → ドラッグ
+         *
+         * 1倍では移動させない
+         */
+        if (pointers.size === 1 && scale > 1) {
+
+            e.preventDefault();
+
+            translateX += dx;
+            translateY += dy;
+
+            updateTransform();
+        }
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+/* ---------------------------------------------------------
+   Pointer Up
+   --------------------------------------------------------- */
+
+viewer.addEventListener(
+    "pointerup",
+    function(e) {
+
+        pointers.delete(e.pointerId);
+
+        if (pointers.size < 2) {
+            lastPinchDistance = null;
+        }
+
+        image.classList.remove("dragging");
+
+    }
+);
+
+
+/* ---------------------------------------------------------
+   Pointer Cancel
+   --------------------------------------------------------- */
+
+viewer.addEventListener(
+    "pointercancel",
+    function(e) {
+
+        pointers.delete(e.pointerId);
+
+        lastPinchDistance = null;
+
+        image.classList.remove("dragging");
+
+    }
+);
+
+
+/* =========================================================
+   2本指の距離
+   ========================================================= */
+
+function getPointerDistance() {
+
+    const values =
+        Array.from(pointers.values());
+
+    if (values.length < 2) {
+        return 0;
+    }
+
+    const dx =
+        values[0].x -
+        values[1].x;
+
+    const dy =
+        values[0].y -
+        values[1].y;
+
+    return Math.sqrt(
+        dx * dx +
+        dy * dy
+    );
+}
+
+
+/* =========================================================
+   ダブルタップ／ダブルクリック
+   ========================================================= */
+
+viewer.addEventListener(
+    "click",
+    function(e) {
+
+        /*
+         * ボタンは除外
+         */
+        if (
+            e.target.tagName === "BUTTON"
+        ) {
+            return;
+        }
+
+        const now = Date.now();
+
+        if (
+            now - lastTapTime < 350
+        ) {
+
+            if (scale === 1) {
+
+                setScale(
+                    2,
+                    e.clientX,
+                    e.clientY
+                );
+
+            } else {
+
+                resetView();
+
+            }
+
+        }
+
+        lastTapTime = now;
+
+    }
+);
+
+
+/* =========================================================
+   Full Screen
+   ========================================================= */
+
+document.getElementById("fullscreen")
+.addEventListener(
+    "click",
+    async function() {
+
+        try {
+
+            if (!document.fullscreenElement) {
+
+                if (
+                    viewer.requestFullscreen
+                ) {
+
+                    await viewer.requestFullscreen();
+
+                } else {
+
+                    /*
+                     * iPhone等、Full Screen APIが
+                     * 利用できないブラウザでは何もしない。
+                     */
+
+                    alert(
+                        "このブラウザでは、Webページからの完全な全画面表示に対応していません。\n\n" +
+                        "写真はすでにブラウザ画面いっぱいに表示されています。"
+                    );
+
+                }
+
+            } else {
+
+                await document.exitFullscreen();
+
+            }
+
+        } catch (e) {
+
+            console.log(
+                "Fullscreen error:",
+                e
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   閉じるボタン
+   ========================================================= */
+
+document.getElementById("closeButton")
+.addEventListener(
+    "click",
+    function() {
+
+        /*
+         * Googleサイトから新しいタブで開いた場合は、
+         * history.back() によって元の状態へ戻る。
+         */
+
+        if (window.history.length > 1) {
+
+            window.history.back();
+
+        } else {
+
+            window.close();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   キーボード操作（PC用）
+   ========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function(e) {
+
+        switch (e.key) {
+
+            case "+":
+            case "=":
+
+                setScale(
+                    scale * 1.5,
+                    viewer.clientWidth / 2,
+                    viewer.clientHeight / 2
+                );
+
+                break;
+
+
+            case "-":
+
+                setScale(
+                    scale / 1.5,
+                    viewer.clientWidth / 2,
+                    viewer.clientHeight / 2
+                );
+
+                break;
+
+
+            case "0":
+
+                resetView();
+
+                break;
+
+
+            case "Escape":
+
+                if (document.fullscreenElement) {
+
+                    document.exitFullscreen();
+
+                } else {
+
+                    window.history.back();
+
+                }
+
+                break;
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
