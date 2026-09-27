@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-
 <meta charset="UTF-8">
 
 <meta name="viewport"
       content="width=device-width,
-               initial-scale=1,
-               maximum-scale=5,
+               height=device-height,
+               initial-scale=1.0,
+               maximum-scale=5.0,
                user-scalable=yes,
                viewport-fit=cover">
 
-<title>ふなだまり写真</title>
+<title>Photo Viewer</title>
 
 <style>
+
+* {
+    box-sizing: border-box;
+}
 
 html,
 body {
@@ -23,61 +27,43 @@ body {
     width: 100%;
     height: 100%;
 
-    background: #000;
-
     overflow: hidden;
 
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
+    background: #000;
+
+    font-family: sans-serif;
+
+    touch-action: none;
 }
 
-
-/* =========================================
-   ビューア
-   ========================================= */
 
 #viewer {
 
     position: fixed;
 
-    left: 0;
-    top: 0;
+    inset: 0;
 
-    width: 100vw;
-
-    /*
-     * JavaScriptで実際の表示領域を設定する
-     */
-    height: 100vh;
-
-    background: #000;
+    width: 100%;
+    height: 100%;
 
     overflow: hidden;
 
+    background: #000;
+
     touch-action: none;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    user-select: none;
-    -webkit-user-select: none;
 }
 
 
-/* =========================================
+/* ------------------------------------------
    写真
-   ========================================= */
+------------------------------------------ */
 
 #image {
 
     position: absolute;
 
-    display: block;
+    left: 50%;
+    top: 50%;
 
     max-width: none;
     max-height: none;
@@ -85,174 +71,152 @@ body {
     transform-origin: center center;
 
     user-select: none;
-
     -webkit-user-select: none;
 
     -webkit-user-drag: none;
 
-    cursor: grab;
-
-    touch-action: none;
-
-    will-change: transform;
-}
-
-#image.dragging {
-
-    cursor: grabbing;
+    pointer-events: none;
 }
 
 
-/* =========================================
+/* ------------------------------------------
+   タイトル
+------------------------------------------ */
+
+#title {
+
+    position: fixed;
+
+    top: max(10px, env(safe-area-inset-top));
+
+    left: max(12px, env(safe-area-inset-left));
+
+    max-width:
+        calc(100vw - 80px);
+
+    padding: 7px 12px;
+
+    color: white;
+
+    background:
+        rgba(0, 0, 0, 0.55);
+
+    border-radius: 6px;
+
+    font-size: 17px;
+
+    line-height: 1.4;
+
+    z-index: 20;
+
+    display: none;
+
+    pointer-events: none;
+
+    text-shadow:
+        0 1px 2px rgba(0,0,0,0.8);
+}
+
+
+/* ------------------------------------------
    閉じるボタン
-   ========================================= */
+------------------------------------------ */
 
 #closeButton {
 
     position: fixed;
 
-    right: 14px;
+    top: max(10px, env(safe-area-inset-top));
 
-    top:
-        calc(
-            env(safe-area-inset-top, 0px)
-            + 12px
-        );
+    right: max(10px, env(safe-area-inset-right));
 
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
+
+    padding: 0;
 
     border: none;
 
     border-radius: 50%;
 
     background:
-        rgba(30,30,30,0.65);
+        rgba(0,0,0,0.55);
 
     color: white;
 
-    font-size: 28px;
+    font-size: 25px;
+
+    line-height: 42px;
+
+    text-align: center;
 
     z-index: 30;
 
+    cursor: pointer;
+
+    touch-action: manipulation;
 }
 
 
-/* =========================================
+#closeButton:active {
+
+    background:
+        rgba(255,255,255,0.35);
+}
+
+
+/* ------------------------------------------
    操作ボタン
-   ========================================= */
+------------------------------------------ */
 
 #controls {
 
     position: fixed;
 
-    left: 50%;
-
     bottom:
-        calc(
-            env(safe-area-inset-bottom, 0px)
-            + 18px
-        );
+        max(12px, env(safe-area-inset-bottom));
+
+    left: 50%;
 
     transform:
         translateX(-50%);
 
     display: flex;
 
-    gap: 10px;
-
-    padding: 8px 10px;
-
-    background:
-        rgba(0,0,0,0.35);
-
-    border-radius: 28px;
+    gap: 8px;
 
     z-index: 30;
 }
 
 
-button {
+#controls button {
 
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
+
+    padding: 0;
 
     border: none;
 
     border-radius: 50%;
 
     background:
-        rgba(30,30,30,0.7);
+        rgba(0,0,0,0.55);
 
     color: white;
 
-    font-size: 22px;
+    font-size: 20px;
 
-    display: flex;
+    cursor: pointer;
 
-    justify-content: center;
-
-    align-items: center;
-
+    touch-action: manipulation;
 }
 
 
-/* =========================================
-   読み込み表示
-   ========================================= */
-
-#loading {
-
-    position: fixed;
-
-    left: 50%;
-    top: 50%;
-
-    transform:
-        translate(-50%,-50%);
-
-    color: white;
-
-    font-size: 16px;
-
-    z-index: 10;
-}
-
-
-/* =========================================
-   エラー
-   ========================================= */
-
-#error {
-
-    display: none;
-
-    position: fixed;
-
-    left: 50%;
-    top: 50%;
-
-    transform:
-        translate(-50%,-50%);
-
-    width: 80%;
-
-    max-width: 500px;
-
-    padding: 20px;
-
-    box-sizing: border-box;
-
-    color: white;
+#controls button:active {
 
     background:
-        rgba(180,0,0,0.8);
-
-    border-radius: 10px;
-
-    text-align: center;
-
-    z-index: 40;
+        rgba(255,255,255,0.35);
 }
 
 </style>
@@ -265,40 +229,46 @@ button {
 
 <div id="viewer">
 
-    <div id="loading">
-        写真を読み込んでいます…
-    </div>
 
-    <div id="error"></div>
+    <div id="title"></div>
+
 
     <img
         id="image"
-        alt="ふなだまりの写真"
         draggable="false"
-        referrerpolicy="no-referrer"
+        alt=""
     >
 
-</div>
 
-
-<button id="closeButton">
-    ×
-</button>
-
-
-<div id="controls">
-
-    <button id="zoomOut">
-        −
+    <button
+        id="closeButton"
+        aria-label="閉じる">
+        ×
     </button>
 
-    <button id="zoomIn">
-        ＋
-    </button>
 
-    <button id="reset">
-        ↺
-    </button>
+    <div id="controls">
+
+        <button
+            id="zoomOut"
+            aria-label="縮小">
+            −
+        </button>
+
+        <button
+            id="reset"
+            aria-label="初期表示">
+            ↺
+        </button>
+
+        <button
+            id="zoomIn"
+            aria-label="拡大">
+            ＋
+        </button>
+
+    </div>
+
 
 </div>
 
@@ -306,96 +276,118 @@ button {
 <script>
 
 
-/* =====================================================
-   URLから画像を取得
-   ===================================================== */
+// ==================================================
+// URLパラメータ
+// ==================================================
 
 const params =
     new URLSearchParams(
         window.location.search
     );
 
-const imageURL =
+
+const imageUrl =
     params.get("image");
 
 
-const image =
-    document.getElementById("image");
+const titleText =
+    params.get("title");
+
+
+// ==================================================
+// DOM
+// ==================================================
 
 const viewer =
     document.getElementById("viewer");
 
-const loading =
-    document.getElementById("loading");
+const image =
+    document.getElementById("image");
 
-const errorBox =
-    document.getElementById("error");
+const title =
+    document.getElementById("title");
 
 
-/* =====================================================
-   画像URL
-   ===================================================== */
+// ==================================================
+// タイトル
+// ==================================================
 
-if (imageURL) {
+if (titleText) {
 
-    image.src = imageURL;
+    title.textContent =
+        titleText;
+
+    title.style.display =
+        "block";
+}
+
+
+// ==================================================
+// 画像URL
+// ==================================================
+
+if (imageUrl) {
+
+    image.src =
+        imageUrl;
 
 }
 else {
 
-    loading.style.display =
-        "none";
+    title.textContent =
+        "画像URLが指定されていません";
 
-    errorBox.style.display =
+    title.style.display =
         "block";
-
-    errorBox.textContent =
-        "画像が指定されていません。";
-
 }
 
 
-/* =====================================================
-   ズーム設定
-   ===================================================== */
+// ==================================================
+// ズーム設定
+// ==================================================
+//
+// fitScale
+//   = 画像を画面いっぱいに収めるための倍率
+//
+// scale
+//   = fitScaleに対する相対倍率
+//
+// 例：
+//
+// scale = 0.9
+// → fitScaleの90%
+//
+// scale = 1.0
+// → fitScaleと同じ
+//
+// scale = 2.0
+// → fitScaleの2倍
+//
+// ==================================================
 
-/*
- * 初期表示倍率。
- *
- * 1.00 = 画面いっぱい
- *
- * 0.90 = 少し余裕を持たせる
- *
- * iPhoneでは0.90程度がおすすめ
- */
 
 const INITIAL_SCALE = 0.90;
-
 
 const MIN_SCALE = 0.40;
 
 const MAX_SCALE = 5.0;
 
 
-let fitScale = 1;
+let fitScale = 1.0;
 
-let scale = 1;
+let scale = INITIAL_SCALE;
+
 
 let translateX = 0;
 
 let translateY = 0;
 
 
-/* =====================================================
-   実際の表示領域を取得
-   ===================================================== */
+// ==================================================
+// ビューポートサイズ
+// ==================================================
 
 function getViewportSize() {
-
-    /*
-     * visualViewportが使える場合は
-     * ブラウザが実際に表示している領域を使う。
-     */
 
     if (window.visualViewport) {
 
@@ -425,236 +417,117 @@ function getViewportSize() {
 }
 
 
-/* =====================================================
-   viewerの高さを更新
-   ===================================================== */
-
-function updateViewerSize() {
-
-    const vp =
-        getViewportSize();
-
-
-    viewer.style.width =
-        vp.width + "px";
-
-
-    viewer.style.height =
-        vp.height + "px";
-
-}
-
-
-/* =====================================================
-   初期表示倍率計算
-   ===================================================== */
+// ==================================================
+// Fit倍率計算
+// ==================================================
 
 function calculateFitScale() {
 
-    if (
-        !image.naturalWidth ||
-        !image.naturalHeight
-    ) {
+    const viewport =
+        getViewportSize();
 
-        return 1;
+
+    const vw =
+        viewport.width;
+
+    const vh =
+        viewport.height;
+
+
+    const iw =
+        image.naturalWidth;
+
+    const ih =
+        image.naturalHeight;
+
+
+    if (!iw || !ih) {
+
+        fitScale = 1;
+
+        return;
 
     }
 
 
-    const vp =
-        getViewportSize();
-
-
     const scaleX =
-        vp.width /
-        image.naturalWidth;
-
+        vw / iw;
 
     const scaleY =
-        vp.height /
-        image.naturalHeight;
+        vh / ih;
 
 
-    /*
-     * 写真全体を表示できる倍率
-     */
+    // 画像全体が画面内に入る倍率
 
-    return Math.min(
-        scaleX,
-        scaleY
-    );
+    fitScale =
+        Math.min(
+            scaleX,
+            scaleY
+        );
 
 }
 
 
-/* =====================================================
-   表示更新
-   ===================================================== */
+// ==================================================
+// 画像更新
+// ==================================================
 
-function updateTransform() {
+function updateImage() {
+
+    const actualScale =
+        fitScale * scale;
+
+
+    image.style.width =
+        image.naturalWidth + "px";
+
+    image.style.height =
+        image.naturalHeight + "px";
+
 
     image.style.transform =
-
+        "translate(-50%, -50%) " +
         "translate(" +
-
-        translateX +
-
-        "px, " +
-
-        translateY +
-
-        "px) " +
-
+            translateX +
+            "px, " +
+            translateY +
+            "px" +
+        ") " +
         "scale(" +
-
-        (fitScale * scale) +
-
+            actualScale +
         ")";
 
 }
 
 
-/* =====================================================
-   初期表示
-   ===================================================== */
+// ==================================================
+// 初期表示
+// ==================================================
 
 function resetView() {
 
-    updateViewerSize();
+    calculateFitScale();
 
-
-    fitScale =
-        calculateFitScale();
-
-
-    /*
-     * 初期表示を少し縮小
-     */
 
     scale =
         INITIAL_SCALE;
 
 
-    translateX = 0;
+    translateX =
+        0;
 
-    translateY = 0;
-
-
-    updateTransform();
-
-}
+    translateY =
+        0;
 
 
-/* =====================================================
-   画像読み込み完了
-   ===================================================== */
-
-image.addEventListener(
-    "load",
-    function() {
-
-        loading.style.display =
-            "none";
-
-        resetView();
-
-    }
-);
-
-
-/* =====================================================
-   エラー
-   ===================================================== */
-
-image.addEventListener(
-    "error",
-    function() {
-
-        loading.style.display =
-            "none";
-
-        errorBox.style.display =
-            "block";
-
-        errorBox.textContent =
-            "写真を読み込めませんでした。";
-
-    }
-);
-
-
-/* =====================================================
-   画面サイズ変更
-   ===================================================== */
-
-function handleViewportChange() {
-
-    /*
-     * 縦→横などで画面サイズが変わった場合、
-     * 現在の写真の倍率を再計算する。
-     */
-
-    const oldScale =
-        scale;
-
-
-    updateViewerSize();
-
-
-    fitScale =
-        calculateFitScale();
-
-
-    /*
-     * まだ初期倍率なら
-     * 新しい画面サイズに合わせて
-     * 再配置する。
-     */
-
-    if (oldScale <= INITIAL_SCALE + 0.01) {
-
-        scale =
-            INITIAL_SCALE;
-
-        translateX = 0;
-
-        translateY = 0;
-
-    }
-
-
-    updateTransform();
+    updateImage();
 
 }
 
 
-/*
- * visualViewportの変化
- */
-
-if (window.visualViewport) {
-
-    window.visualViewport.addEventListener(
-        "resize",
-        handleViewportChange
-    );
-
-}
-
-
-/*
- * 通常のresize
- */
-
-window.addEventListener(
-    "resize",
-    handleViewportChange
-);
-
-
-/* =====================================================
-   ズーム
-   ===================================================== */
+// ==================================================
+// ズーム変更
+// ==================================================
 
 function setScale(
     newScale,
@@ -662,30 +535,93 @@ function setScale(
     centerY
 ) {
 
-    const oldScale =
-        scale;
 
-
-    scale =
-        Math.min(
-            Math.max(
-                newScale,
-                MIN_SCALE
-            ),
-            MAX_SCALE
+    newScale =
+        Math.max(
+            MIN_SCALE,
+            Math.min(
+                MAX_SCALE,
+                newScale
+            )
         );
 
 
-    /*
-     * 1倍以下になったら中央へ
-     */
+    if (newScale === scale) {
+
+        return;
+
+    }
+
+
+    const oldActualScale =
+        fitScale * scale;
+
+
+    const newActualScale =
+        fitScale * newScale;
+
+
+    // 中心位置が指定されていない場合は画面中央
 
     if (
-        scale <= INITIAL_SCALE
+        centerX === undefined ||
+        centerY === undefined
     ) {
 
-        scale =
-            INITIAL_SCALE;
+        const viewport =
+            getViewportSize();
+
+
+        centerX =
+            viewport.width / 2;
+
+        centerY =
+            viewport.height / 2;
+
+    }
+
+
+    const imageCenterX =
+        getViewportSize().width / 2
+        + translateX;
+
+
+    const imageCenterY =
+        getViewportSize().height / 2
+        + translateY;
+
+
+    const dx =
+        centerX - imageCenterX;
+
+
+    const dy =
+        centerY - imageCenterY;
+
+
+    const ratio =
+        newActualScale /
+        oldActualScale;
+
+
+    // ズーム中心を維持
+
+    translateX -=
+        dx * (ratio - 1);
+
+
+    translateY -=
+        dy * (ratio - 1);
+
+
+    scale =
+        newScale;
+
+
+    // 初期表示以下になった場合は
+    // 中央位置に戻す
+
+    if (scale <= INITIAL_SCALE) {
 
         translateX = 0;
 
@@ -694,91 +630,18 @@ function setScale(
     }
 
 
-    /*
-     * ズーム中心を維持
-     */
-
-    if (
-        centerX !== undefined &&
-        centerY !== undefined
-    ) {
-
-        const ratio =
-            scale / oldScale - 1;
-
-
-        translateX -=
-            (
-                centerX -
-                viewer.clientWidth / 2
-            )
-            * ratio;
-
-
-        translateY -=
-            (
-                centerY -
-                viewer.clientHeight / 2
-            )
-            * ratio;
-
-    }
-
-
-    updateTransform();
+    updateImage();
 
 }
 
 
-/* =====================================================
-   ＋ボタン
-   ===================================================== */
+// ==================================================
+// 画像ロード完了
+// ==================================================
 
-document
-.getElementById("zoomIn")
-.addEventListener(
-    "click",
-    function() {
-
-        setScale(
-            scale * 1.5,
-            viewer.clientWidth / 2,
-            viewer.clientHeight / 2
-        );
-
-    }
-);
-
-
-/* =====================================================
-   −ボタン
-   ===================================================== */
-
-document
-.getElementById("zoomOut")
-.addEventListener(
-    "click",
-    function() {
-
-        setScale(
-            scale / 1.5,
-            viewer.clientWidth / 2,
-            viewer.clientHeight / 2
-        );
-
-    }
-);
-
-
-/* =====================================================
-   リセット
-   ===================================================== */
-
-document
-.getElementById("reset")
-.addEventListener(
-    "click",
-    function() {
+image.addEventListener(
+    "load",
+    () => {
 
         resetView();
 
@@ -786,9 +649,176 @@ document
 );
 
 
-/* =====================================================
-   Pointer操作
-   ===================================================== */
+// ==================================================
+// PC：マウスホイール
+// ==================================================
+
+viewer.addEventListener(
+    "wheel",
+    (event) => {
+
+        event.preventDefault();
+
+
+        const rect =
+            viewer.getBoundingClientRect();
+
+
+        const x =
+            event.clientX -
+            rect.left;
+
+
+        const y =
+            event.clientY -
+            rect.top;
+
+
+        const zoomFactor =
+            event.deltaY < 0
+                ? 1.15
+                : 1 / 1.15;
+
+
+        setScale(
+            scale * zoomFactor,
+            x,
+            y
+        );
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+// ==================================================
+// ＋ボタン
+// ==================================================
+
+document
+    .getElementById("zoomIn")
+    .addEventListener(
+        "click",
+        () => {
+
+            setScale(
+                scale * 1.25
+            );
+
+        }
+    );
+
+
+// ==================================================
+// −ボタン
+// ==================================================
+
+document
+    .getElementById("zoomOut")
+    .addEventListener(
+        "click",
+        () => {
+
+            setScale(
+                scale / 1.25
+            );
+
+        }
+    );
+
+
+// ==================================================
+// リセット
+// ==================================================
+
+document
+    .getElementById("reset")
+    .addEventListener(
+        "click",
+        () => {
+
+            resetView();
+
+        }
+    );
+
+
+// ==================================================
+// 閉じる
+// ==================================================
+
+document
+    .getElementById("closeButton")
+    .addEventListener(
+        "click",
+        () => {
+
+            if (
+                window.history.length > 1
+            ) {
+
+                window.history.back();
+
+            }
+            else {
+
+                window.close();
+
+            }
+
+        }
+    );
+
+
+// ==================================================
+// ダブルクリック
+// ==================================================
+
+viewer.addEventListener(
+    "dblclick",
+    (event) => {
+
+
+        const rect =
+            viewer.getBoundingClientRect();
+
+
+        const x =
+            event.clientX -
+            rect.left;
+
+
+        const y =
+            event.clientY -
+            rect.top;
+
+
+        if (
+            scale <= INITIAL_SCALE
+        ) {
+
+            setScale(
+                2.0,
+                x,
+                y
+            );
+
+        }
+        else {
+
+            resetView();
+
+        }
+
+    }
+);
+
+
+// ==================================================
+// Pointer Events
+// ==================================================
 
 const pointers =
     new Map();
@@ -798,48 +828,84 @@ let lastPinchDistance =
     null;
 
 
-/* =====================================================
-   Pointer Down
-   ===================================================== */
+let lastPointerX =
+    0;
+
+
+let lastPointerY =
+    0;
+
+
+// ==================================================
+// 2点間距離
+// ==================================================
+
+function getDistance(
+    p1,
+    p2
+) {
+
+    const dx =
+        p1.clientX -
+        p2.clientX;
+
+
+    const dy =
+        p1.clientY -
+        p2.clientY;
+
+
+    return Math.sqrt(
+        dx * dx +
+        dy * dy
+    );
+
+}
+
+
+// ==================================================
+// Pointer Down
+// ==================================================
 
 viewer.addEventListener(
     "pointerdown",
-    function(e) {
-
-        if (
-            e.target.tagName ===
-            "BUTTON"
-        ) {
-
-            return;
-
-        }
+    (event) => {
 
 
         viewer.setPointerCapture(
-            e.pointerId
+            event.pointerId
         );
 
 
         pointers.set(
-            e.pointerId,
-            {
-                x: e.clientX,
-                y: e.clientY
-            }
+            event.pointerId,
+            event
         );
 
 
-        /*
-         * 2本指
-         */
+        lastPointerX =
+            event.clientX;
+
+
+        lastPointerY =
+            event.clientY;
+
 
         if (
             pointers.size === 2
         ) {
 
+            const pts =
+                Array.from(
+                    pointers.values()
+                );
+
+
             lastPinchDistance =
-                getPointerDistance();
+                getDistance(
+                    pts[0],
+                    pts[1]
+                );
 
         }
 
@@ -847,17 +913,18 @@ viewer.addEventListener(
 );
 
 
-/* =====================================================
-   Pointer Move
-   ===================================================== */
+// ==================================================
+// Pointer Move
+// ==================================================
 
 viewer.addEventListener(
     "pointermove",
-    function(e) {
+    (event) => {
+
 
         if (
             !pointers.has(
-                e.pointerId
+                event.pointerId
             )
         ) {
 
@@ -866,65 +933,70 @@ viewer.addEventListener(
         }
 
 
-        const old =
-            pointers.get(
-                e.pointerId
-            );
-
-
-        const dx =
-            e.clientX -
-            old.x;
-
-
-        const dy =
-            e.clientY -
-            old.y;
-
-
         pointers.set(
-            e.pointerId,
-            {
-                x: e.clientX,
-                y: e.clientY
-            }
+            event.pointerId,
+            event
         );
 
 
-        /*
-         * 2本指
-         * → ピンチズーム
-         */
+        // --------------------------------------
+        // 2本指
+        // --------------------------------------
 
         if (
             pointers.size === 2
         ) {
 
-            e.preventDefault();
+
+            const pts =
+                Array.from(
+                    pointers.values()
+                );
 
 
-            const distance =
-                getPointerDistance();
+            const currentDistance =
+                getDistance(
+                    pts[0],
+                    pts[1]
+                );
 
 
             if (
-                lastPinchDistance
+                lastPinchDistance !== null &&
+                lastPinchDistance > 0
             ) {
 
-                const ratio =
-                    distance /
+
+                const factor =
+                    currentDistance /
                     lastPinchDistance;
 
 
+                const centerX =
+                    (
+                        pts[0].clientX +
+                        pts[1].clientX
+                    ) / 2;
+
+
+                const centerY =
+                    (
+                        pts[0].clientY +
+                        pts[1].clientY
+                    ) / 2;
+
+
                 setScale(
-                    scale * ratio
+                    scale * factor,
+                    centerX,
+                    centerY
                 );
 
             }
 
 
             lastPinchDistance =
-                distance;
+                currentDistance;
 
 
             return;
@@ -932,45 +1004,61 @@ viewer.addEventListener(
         }
 
 
-        /*
-         * 1本指
-         * → 拡大中ならドラッグ
-         */
+        // --------------------------------------
+        // 1本指ドラッグ
+        // --------------------------------------
 
         if (
             pointers.size === 1 &&
             scale > INITIAL_SCALE
         ) {
 
-            e.preventDefault();
+
+            const dx =
+                event.clientX -
+                lastPointerX;
 
 
-            translateX += dx;
+            const dy =
+                event.clientY -
+                lastPointerY;
 
-            translateY += dy;
+
+            translateX +=
+                dx;
 
 
-            updateTransform();
+            translateY +=
+                dy;
+
+
+            updateImage();
 
         }
 
-    },
-    {
-        passive: false
+
+        lastPointerX =
+            event.clientX;
+
+
+        lastPointerY =
+            event.clientY;
+
     }
 );
 
 
-/* =====================================================
-   Pointer Up
-   ===================================================== */
+// ==================================================
+// Pointer Up
+// ==================================================
 
 viewer.addEventListener(
     "pointerup",
-    function(e) {
+    (event) => {
+
 
         pointers.delete(
-            e.pointerId
+            event.pointerId
         );
 
 
@@ -987,250 +1075,115 @@ viewer.addEventListener(
 );
 
 
-/* =====================================================
-   Pointer Cancel
-   ===================================================== */
+// ==================================================
+// Pointer Cancel
+// ==================================================
 
 viewer.addEventListener(
     "pointercancel",
-    function(e) {
+    (event) => {
+
 
         pointers.delete(
-            e.pointerId
+            event.pointerId
         );
 
-        lastPinchDistance =
-            null;
+
+        if (
+            pointers.size < 2
+        ) {
+
+            lastPinchDistance =
+                null;
+
+        }
 
     }
 );
 
 
-/* =====================================================
-   2本指の距離
-   ===================================================== */
+// ==================================================
+// 画面サイズ変更
+// ==================================================
 
-function getPointerDistance() {
-
-    const values =
-        Array.from(
-            pointers.values()
-        );
+function handleViewportChange() {
 
 
-    if (
-        values.length < 2
-    ) {
+    // 現在の倍率を維持したまま
+    // fitScaleだけ再計算する
 
-        return 0;
+
+    calculateFitScale();
+
+
+    // 画面回転時などに写真が画面外へ
+    // 大きく移動してしまわないよう中央へ戻す
+
+    translateX = 0;
+
+    translateY = 0;
+
+
+    updateImage();
+
+}
+
+
+// ==================================================
+// Window resize
+// ==================================================
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        handleViewportChange();
 
     }
+);
 
 
-    const dx =
-        values[0].x -
-        values[1].x;
+// ==================================================
+// Visual Viewport
+// ==================================================
 
+if (
+    window.visualViewport
+) {
 
-    const dy =
-        values[0].y -
-        values[1].y;
+    window.visualViewport.addEventListener(
+        "resize",
+        () => {
 
+            handleViewportChange();
 
-    return Math.sqrt(
-        dx * dx +
-        dy * dy
+        }
     );
 
 }
 
 
-/* =====================================================
-   PC：マウスホイールズーム
-   ===================================================== */
+// ==================================================
+// 初期化
+// ==================================================
 
-viewer.addEventListener(
-    "wheel",
-    function(e) {
-
-        /*
-         * ブラウザのページスクロールを止める
-         */
-
-        e.preventDefault();
-
-
-        /*
-         * マウスポインタの位置を中心に
-         * ズームする。
-         */
-
-        const rect =
-            viewer.getBoundingClientRect();
-
-
-        const x =
-            e.clientX -
-            rect.left;
-
-
-        const y =
-            e.clientY -
-            rect.top;
-
-
-        /*
-         * 上へ回す → 拡大
-         *
-         * 下へ回す → 縮小
-         */
-
-        const zoomFactor =
-            Math.exp(
-                -e.deltaY * 0.002
-            );
-
-
-        setScale(
-            scale * zoomFactor,
-            x,
-            y
-        );
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-/* =====================================================
-   PC：ダブルクリック
-   ===================================================== */
-
-viewer.addEventListener(
-    "dblclick",
-    function(e) {
-
-        if (
-            e.target.tagName ===
-            "BUTTON"
-        ) {
-
-            return;
-
-        }
+window.addEventListener(
+    "load",
+    () => {
 
 
         if (
-            scale <= INITIAL_SCALE
-        ) {
-
-            setScale(
-                2,
-                e.clientX,
-                e.clientY
-            );
-
-        }
-        else {
-
-            resetView();
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   閉じる
-   ===================================================== */
-
-document
-.getElementById("closeButton")
-.addEventListener(
-    "click",
-    function() {
-
-        if (
-            window.history.length > 1
-        ) {
-
-            window.history.back();
-
-        }
-        else {
-
-            window.close();
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   キーボード
-   ===================================================== */
-
-document.addEventListener(
-    "keydown",
-    function(e) {
-
-        if (
-            e.key === "+"
-            ||
-            e.key === "="
-        ) {
-
-            setScale(
-                scale * 1.5,
-                viewer.clientWidth / 2,
-                viewer.clientHeight / 2
-            );
-
-        }
-
-
-        if (
-            e.key === "-"
-        ) {
-
-            setScale(
-                scale / 1.5,
-                viewer.clientWidth / 2,
-                viewer.clientHeight / 2
-            );
-
-        }
-
-
-        if (
-            e.key === "0"
+            image.complete &&
+            image.naturalWidth
         ) {
 
             resetView();
 
         }
 
-
-        if (
-            e.key === "Escape"
-        ) {
-
-            if (
-                window.history.length > 1
-            ) {
-
-                window.history.back();
-
-            }
-
-        }
-
     }
 );
+
 
 </script>
 
