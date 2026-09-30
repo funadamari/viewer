@@ -194,7 +194,6 @@ body {
 
 }
 
-
 </style>
 
 </head>
@@ -226,32 +225,28 @@ body {
     <button
         id="zoomOut"
         class="controlButton"
-        type="button"
-        aria-label="縮小">
+        type="button">
         −
     </button>
 
     <button
         id="zoomIn"
         class="controlButton"
-        type="button"
-        aria-label="拡大">
+        type="button">
         ＋
     </button>
 
     <button
         id="resetButton"
         class="controlButton"
-        type="button"
-        aria-label="リセット">
+        type="button">
         ↺
     </button>
 
     <button
         id="closeButton"
         class="controlButton"
-        type="button"
-        aria-label="閉じる">
+        type="button">
         ×
     </button>
 
@@ -264,7 +259,6 @@ body {
 /* =========================================================
    設定
 ========================================================= */
-
 
 const INITIAL_SCALE = 0.90;
 
@@ -284,33 +278,34 @@ const TAP_MOVE_THRESHOLD = 12;
 
 
 /*
-   launcherとの画像情報共有
+   launcherとの通信
 */
 
 const VIEWER_STORAGE_KEY =
     "funadamariViewerRequest";
 
 
-/*
-   現在表示中のviewer情報
-*/
-
 const ACTIVE_VIEWER_KEY =
     "funadamariActiveViewer";
 
-
-/*
-   古いviewer requestを無視するための時間
-*/
 
 const REQUEST_VALID_TIME =
     30 * 1000;
 
 
+/*
+   viewerの名前
+
+   launcherと共通にする。
+*/
+
+const VIEWER_WINDOW_NAME =
+    "funadamariViewer";
+
+
 /* =========================================================
    URLパラメータ
 ========================================================= */
-
 
 const params =
     new URLSearchParams(
@@ -326,72 +321,38 @@ let initialTitle =
     params.get("title") || "";
 
 
-
 /* =========================================================
-   HTML要素
+   HTML
 ========================================================= */
 
-
 const viewer =
-    document.getElementById(
-        "viewer"
-    );
-
+    document.getElementById("viewer");
 
 const image =
-    document.getElementById(
-        "image"
-    );
-
+    document.getElementById("image");
 
 const titleElement =
-    document.getElementById(
-        "title"
-    );
-
+    document.getElementById("title");
 
 const loading =
-    document.getElementById(
-        "loading"
-    );
-
+    document.getElementById("loading");
 
 const zoomInButton =
-    document.getElementById(
-        "zoomIn"
-    );
-
+    document.getElementById("zoomIn");
 
 const zoomOutButton =
-    document.getElementById(
-        "zoomOut"
-    );
-
+    document.getElementById("zoomOut");
 
 const resetButton =
-    document.getElementById(
-        "resetButton"
-    );
-
+    document.getElementById("resetButton");
 
 const closeButton =
-    document.getElementById(
-        "closeButton"
-    );
-
+    document.getElementById("closeButton");
 
 
 /* =========================================================
    Viewer ID
 ========================================================= */
-
-
-/*
-   sessionStorageに保存しておくことで、
-   同じviewerタブでは同じIDを使用する。
-
-   別タブでは別IDになる。
-*/
 
 let VIEWER_ID =
     sessionStorage.getItem(
@@ -418,11 +379,33 @@ if (!VIEWER_ID) {
 }
 
 
-
 /* =========================================================
-   viewerの状態
+   Window name
 ========================================================= */
 
+try {
+
+    /*
+       このviewerは常にこの名前を持つ。
+
+       launcherが同じ名前を指定した場合、
+       このwindowを再利用できるようにする。
+    */
+
+    window.name =
+        VIEWER_WINDOW_NAME;
+
+}
+catch (error) {
+
+    // ignore
+
+}
+
+
+/* =========================================================
+   表示状態
+========================================================= */
 
 let fitScale = 1;
 
@@ -433,12 +416,6 @@ let translateX = 0;
 let translateY = 0;
 
 
-/*
-   画像の実際の表示倍率
-
-   fitScale × scale
-*/
-
 function getActualScale() {
 
     return fitScale * scale;
@@ -447,9 +424,8 @@ function getActualScale() {
 
 
 /* =========================================================
-   pointer / touch状態
+   Pointer状態
 ========================================================= */
-
 
 const pointers =
     new Map();
@@ -462,10 +438,6 @@ let dragLastX = 0;
 let dragLastY = 0;
 
 
-/*
-   pinch開始時の情報
-*/
-
 let pinchStartDistance = 0;
 
 let pinchStartScale = 1;
@@ -475,15 +447,12 @@ let pinchCenterX = 0;
 let pinchCenterY = 0;
 
 
-/*
-   タップ判定
-*/
-
 let tapStartX = 0;
 
 let tapStartY = 0;
 
 let tapMoved = false;
+
 
 let lastTapTime = 0;
 
@@ -492,11 +461,9 @@ let lastTapX = 0;
 let lastTapY = 0;
 
 
-
 /* =========================================================
-   画像の表示位置制限
+   translation制限
 ========================================================= */
-
 
 function clampTranslation() {
 
@@ -522,15 +489,16 @@ function clampTranslation() {
         viewer.clientHeight;
 
 
-    /*
-       横方向
-    */
-
-    if (imageWidth <= viewportWidth) {
+    if (
+        imageWidth <=
+        viewportWidth
+    ) {
 
         translateX =
-            (viewportWidth -
-             imageWidth) / 2;
+            (
+                viewportWidth -
+                imageWidth
+            ) / 2;
 
     }
     else {
@@ -540,34 +508,37 @@ function clampTranslation() {
             imageWidth;
 
 
-        const maxX = 0;
+        if (
+            translateX < minX
+        ) {
 
-
-        if (translateX < minX) {
-
-            translateX = minX;
+            translateX =
+                minX;
 
         }
 
 
-        if (translateX > maxX) {
+        if (
+            translateX > 0
+        ) {
 
-            translateX = maxX;
+            translateX = 0;
 
         }
 
     }
 
 
-    /*
-       縦方向
-    */
-
-    if (imageHeight <= viewportHeight) {
+    if (
+        imageHeight <=
+        viewportHeight
+    ) {
 
         translateY =
-            (viewportHeight -
-             imageHeight) / 2;
+            (
+                viewportHeight -
+                imageHeight
+            ) / 2;
 
     }
     else {
@@ -577,19 +548,21 @@ function clampTranslation() {
             imageHeight;
 
 
-        const maxY = 0;
+        if (
+            translateY < minY
+        ) {
 
-
-        if (translateY < minY) {
-
-            translateY = minY;
+            translateY =
+                minY;
 
         }
 
 
-        if (translateY > maxY) {
+        if (
+            translateY > 0
+        ) {
 
-            translateY = maxY;
+            translateY = 0;
 
         }
 
@@ -598,11 +571,9 @@ function clampTranslation() {
 }
 
 
-
 /* =========================================================
-   transform適用
+   Transform
 ========================================================= */
-
 
 function applyTransform() {
 
@@ -622,16 +593,16 @@ function applyTransform() {
 }
 
 
-
 /* =========================================================
-   fitScale計算
+   Fit scale
 ========================================================= */
-
 
 function calculateFitScale() {
 
-    if (!image.naturalWidth ||
-        !image.naturalHeight) {
+    if (
+        !image.naturalWidth ||
+        !image.naturalHeight
+    ) {
 
         return 1;
 
@@ -645,14 +616,6 @@ function calculateFitScale() {
     let viewportHeight =
         viewer.clientHeight;
 
-
-    /*
-       visualViewportが使用可能なら
-       そのサイズを利用する。
-
-       スマートフォンの
-       アドレスバー等によるviewport変化に対応。
-    */
 
     if (window.visualViewport) {
 
@@ -683,11 +646,9 @@ function calculateFitScale() {
 }
 
 
-
 /* =========================================================
-   初期表示
+   Reset
 ========================================================= */
-
 
 function resetView() {
 
@@ -709,11 +670,9 @@ function resetView() {
 }
 
 
-
 /* =========================================================
-   scale変更
+   Scale
 ========================================================= */
-
 
 function setScale(
     newScale,
@@ -740,20 +699,19 @@ function setScale(
         newRelativeScale;
 
 
-    /*
-       zoom中心が同じ位置に残るように
-       translationを調整する。
-    */
-
     const imageX =
-        (centerX -
-         translateX) /
+        (
+            centerX -
+            translateX
+        ) /
         oldActualScale;
 
 
     const imageY =
-        (centerY -
-         translateY) /
+        (
+            centerY -
+            translateY
+        ) /
         oldActualScale;
 
 
@@ -778,11 +736,9 @@ function setScale(
 }
 
 
-
 /* =========================================================
-   zoom
+   Zoom
 ========================================================= */
-
 
 function zoomIn(
     centerX,
@@ -816,7 +772,6 @@ function zoomIn(
     );
 
 }
-
 
 
 function zoomOut(
@@ -853,11 +808,9 @@ function zoomOut(
 }
 
 
-
 /* =========================================================
    画像読み込み
 ========================================================= */
-
 
 function loadImage(
     imageURL,
@@ -909,11 +862,6 @@ function loadImage(
                 "block";
 
 
-            /*
-               新しい画像を表示するときは
-               90% fitから開始
-            */
-
             resetView();
 
         };
@@ -937,20 +885,16 @@ function loadImage(
 }
 
 
-
 /* =========================================================
-   active viewer登録
+   Active viewer登録
 ========================================================= */
-
 
 function registerAsActiveViewer() {
 
     try {
 
         localStorage.setItem(
-
             ACTIVE_VIEWER_KEY,
-
             JSON.stringify({
 
                 id:
@@ -960,7 +904,6 @@ function registerAsActiveViewer() {
                     Date.now()
 
             })
-
         );
 
     }
@@ -976,11 +919,9 @@ function registerAsActiveViewer() {
 }
 
 
-
 /* =========================================================
-   active viewer解除
+   Active viewer解除
 ========================================================= */
-
 
 function unregisterActiveViewer() {
 
@@ -1027,11 +968,9 @@ function unregisterActiveViewer() {
 }
 
 
-
 /* =========================================================
-   active viewer判定
+   Active viewer判定
 ========================================================= */
-
 
 function isActiveViewer() {
 
@@ -1054,18 +993,15 @@ function isActiveViewer() {
             JSON.parse(raw);
 
 
-        if (!info ||
-            info.id !== VIEWER_ID) {
+        if (
+            !info ||
+            info.id !== VIEWER_ID
+        ) {
 
             return false;
 
         }
 
-
-        /*
-           あまりに古いactive情報は
-           無効とする。
-        */
 
         if (info.timestamp) {
 
@@ -1098,11 +1034,9 @@ function isActiveViewer() {
 }
 
 
-
 /* =========================================================
-   launcherからの画像変更要求を確認
+   launcherからの画像変更要求
 ========================================================= */
-
 
 function checkViewerRequest() {
 
@@ -1142,10 +1076,6 @@ function checkViewerRequest() {
     }
 
 
-    /*
-       古い要求は無視
-    */
-
     if (request.timestamp) {
 
         const age =
@@ -1166,7 +1096,7 @@ function checkViewerRequest() {
 
 
     /*
-       自分宛ての要求でなければ無視
+       自分宛てか
     */
 
     if (
@@ -1180,7 +1110,7 @@ function checkViewerRequest() {
 
 
     /*
-       自分がactive viewerでなければ無視
+       active viewerか
     */
 
     if (
@@ -1193,7 +1123,7 @@ function checkViewerRequest() {
 
 
     /*
-       画像を変更
+       画像変更
     */
 
     loadImage(
@@ -1201,51 +1131,12 @@ function checkViewerRequest() {
         request.title
     );
 
-
-    /*
-       ★今回追加した処理
-
-       既存viewerを再利用した場合、
-       viewerタブを前面にする。
-
-       Google Sitesから2枚目以降の
-       画像をクリックした場合に、
-       Google Sites側にフォーカスが
-       戻ってしまう問題への対応。
-    */
-
-    try {
-
-        window.focus();
-
-    }
-    catch (error) {
-
-        console.warn(
-            "viewer focus failed:",
-            error
-        );
-
-    }
-
 }
-
 
 
 /* =========================================================
    storage event
 ========================================================= */
-
-
-/*
-   localStorageの変更は、
-   変更を行った自分自身のwindowには
-   storage eventが発生しない。
-
-   launcherが書き込み、
-   viewerが受け取る構造なので、
-   ここで処理する。
-*/
 
 window.addEventListener(
     "storage",
@@ -1260,39 +1151,17 @@ window.addEventListener(
 
         }
 
-
-        /*
-           active viewer情報が変更された場合も
-           必要に応じて確認する。
-        */
-
-        if (
-            event.key ===
-            ACTIVE_VIEWER_KEY
-        ) {
-
-            checkViewerRequest();
-
-        }
-
     }
 );
-
 
 
 /* =========================================================
    pointerdown
 ========================================================= */
 
-
 viewer.addEventListener(
     "pointerdown",
     function (event) {
-
-        /*
-           controls上の操作は
-           viewer側pointer処理から除外。
-        */
 
         if (
             event.target.closest(
@@ -1335,10 +1204,6 @@ viewer.addEventListener(
             pointers.size === 1
         ) {
 
-            /*
-               1本指ドラッグ開始
-            */
-
             isDragging =
                 true;
 
@@ -1356,10 +1221,6 @@ viewer.addEventListener(
         if (
             pointers.size === 2
         ) {
-
-            /*
-               pinch開始
-            */
 
             isDragging =
                 false;
@@ -1403,11 +1264,9 @@ viewer.addEventListener(
 );
 
 
-
 /* =========================================================
    pointermove
 ========================================================= */
-
 
 viewer.addEventListener(
     "pointermove",
@@ -1432,10 +1291,6 @@ viewer.addEventListener(
             }
         );
 
-
-        /*
-           1本指ドラッグ
-        */
 
         if (
             pointers.size === 1 &&
@@ -1471,12 +1326,9 @@ viewer.addEventListener(
             }
 
 
-            translateX +=
-                dx;
+            translateX += dx;
 
-
-            translateY +=
-                dy;
+            translateY += dy;
 
 
             dragLastX =
@@ -1491,10 +1343,6 @@ viewer.addEventListener(
 
         }
 
-
-        /*
-           2本指pinch
-        */
 
         if (
             pointers.size === 2
@@ -1538,23 +1386,15 @@ viewer.addEventListener(
                     pinchStartDistance;
 
 
-                const newScale =
-                    pinchStartScale *
-                    ratio;
-
-
                 setScale(
-                    newScale,
+                    pinchStartScale *
+                    ratio,
                     centerX,
                     centerY
                 );
 
             }
 
-
-            /*
-               pinch中はタップではない
-            */
 
             tapMoved =
                 true;
@@ -1565,30 +1405,18 @@ viewer.addEventListener(
 );
 
 
-
 /* =========================================================
    pointerup
 ========================================================= */
-
 
 viewer.addEventListener(
     "pointerup",
     function (event) {
 
-        /*
-           残っているpointerを
-           取得する前に削除
-        */
-
         pointers.delete(
             event.pointerId
         );
 
-
-        /*
-           pinch終了後に
-           1本指が残っている場合
-        */
 
         if (
             pointers.size === 1
@@ -1599,17 +1427,6 @@ viewer.addEventListener(
                     pointers.values()
                 )[0];
 
-
-            /*
-               ★重要
-
-               pinchから1本指dragへ移行した際、
-               前回の座標との差による
-               「ジャンプ」を防止する。
-
-               残った指の現在位置を
-               drag基準点にする。
-            */
 
             dragLastX =
                 remaining.x;
@@ -1632,10 +1449,6 @@ viewer.addEventListener(
         }
 
 
-        /*
-           pointerが0本
-        */
-
         if (
             pointers.size === 0
         ) {
@@ -1645,10 +1458,6 @@ viewer.addEventListener(
 
         }
 
-
-        /*
-           タップ判定
-        */
 
         if (!tapMoved) {
 
@@ -1673,10 +1482,6 @@ viewer.addEventListener(
                 DOUBLE_TAP_DISTANCE
             ) {
 
-                /*
-                   double tap
-                */
-
                 if (
                     Math.abs(
                         scale -
@@ -1684,10 +1489,6 @@ viewer.addEventListener(
                     ) <
                     0.01
                 ) {
-
-                    /*
-                       200% → 90%
-                    */
 
                     setScale(
                         INITIAL_SCALE,
@@ -1698,10 +1499,6 @@ viewer.addEventListener(
                 }
                 else {
 
-                    /*
-                       90% → 200%
-                    */
-
                     setScale(
                         DOUBLE_TAP_SCALE,
                         event.clientX,
@@ -1711,8 +1508,7 @@ viewer.addEventListener(
                 }
 
 
-                lastTapTime =
-                    0;
+                lastTapTime = 0;
 
             }
             else {
@@ -1736,11 +1532,9 @@ viewer.addEventListener(
 );
 
 
-
 /* =========================================================
    pointercancel
 ========================================================= */
-
 
 viewer.addEventListener(
     "pointercancel",
@@ -1764,19 +1558,13 @@ viewer.addEventListener(
 );
 
 
-
 /* =========================================================
    PC double click
 ========================================================= */
 
-
 viewer.addEventListener(
     "dblclick",
     function (event) {
-
-        /*
-           controls上では実行しない
-        */
 
         if (
             event.target.closest(
@@ -1818,11 +1606,9 @@ viewer.addEventListener(
 );
 
 
-
 /* =========================================================
-   PC mouse wheel
+   Mouse wheel
 ========================================================= */
-
 
 viewer.addEventListener(
     "wheel",
@@ -1857,11 +1643,9 @@ viewer.addEventListener(
 );
 
 
-
 /* =========================================================
-   zoom buttons
+   ボタン
 ========================================================= */
-
 
 zoomInButton.addEventListener(
     "click",
@@ -1893,11 +1677,9 @@ resetButton.addEventListener(
 );
 
 
-
 /* =========================================================
-   close button
+   Close
 ========================================================= */
-
 
 closeButton.addEventListener(
     "click",
@@ -1921,36 +1703,47 @@ closeButton.addEventListener(
 );
 
 
-
 /* =========================================================
-   viewport変更
+   Viewport変更
 ========================================================= */
-
 
 function handleViewportChange() {
 
-    /*
-       現在の画像の表示位置を
-       できるだけ維持する。
-
-       ただしfitScaleはviewport変更に
-       合わせて再計算する。
-    */
-
-    if (!image.naturalWidth) {
+    if (
+        !image.naturalWidth
+    ) {
 
         return;
 
     }
 
 
-    const oldFitScale =
-        fitScale;
-
-
     const oldActualScale =
-        oldFitScale *
-        scale;
+        getActualScale();
+
+
+    const centerX =
+        viewer.clientWidth / 2;
+
+
+    const centerY =
+        viewer.clientHeight / 2;
+
+
+    const imageX =
+        (
+            centerX -
+            translateX
+        ) /
+        oldActualScale;
+
+
+    const imageY =
+        (
+            centerY -
+            translateY
+        ) /
+        oldActualScale;
 
 
     fitScale =
@@ -1958,51 +1751,24 @@ function handleViewportChange() {
 
 
     const newActualScale =
-        fitScale *
-        scale;
-
-
-    /*
-       viewport中央を基準に
-       表示位置を調整
-    */
-
-    const oldCenterX =
-        viewer.clientWidth / 2;
-
-
-    const oldCenterY =
-        viewer.clientHeight / 2;
-
-
-    const imageCenterX =
-        (oldCenterX -
-         translateX) /
-        oldActualScale;
-
-
-    const imageCenterY =
-        (oldCenterY -
-         translateY) /
-        oldActualScale;
+        getActualScale();
 
 
     translateX =
-        oldCenterX -
-        imageCenterX *
+        centerX -
+        imageX *
         newActualScale;
 
 
     translateY =
-        oldCenterY -
-        imageCenterY *
+        centerY -
+        imageY *
         newActualScale;
 
 
     applyTransform();
 
 }
-
 
 
 window.addEventListener(
@@ -2021,16 +1787,9 @@ if (window.visualViewport) {
 }
 
 
-
 /* =========================================================
-   visibilitychange
+   visibility
 ========================================================= */
-
-
-/*
-   viewerが再び表示された場合、
-   自分をactive viewerとして登録する。
-*/
 
 document.addEventListener(
     "visibilitychange",
@@ -2049,11 +1808,9 @@ document.addEventListener(
 );
 
 
-
 /* =========================================================
    pagehide
 ========================================================= */
-
 
 window.addEventListener(
     "pagehide",
@@ -2065,11 +1822,9 @@ window.addEventListener(
 );
 
 
-
 /* =========================================================
-   contextmenu禁止
+   contextmenu
 ========================================================= */
-
 
 viewer.addEventListener(
     "contextmenu",
@@ -2081,42 +1836,12 @@ viewer.addEventListener(
 );
 
 
-
 /* =========================================================
    初期化
 ========================================================= */
 
-
-/*
-   viewerをactiveとして登録
-*/
-
 registerAsActiveViewer();
 
-
-/*
-   window.nameを設定
-
-   launcherなどからviewerを識別するときに
-   利用できるようにする。
-*/
-
-try {
-
-    window.name =
-        "funadamariViewer";
-
-}
-catch (error) {
-
-    // ignore
-
-}
-
-
-/*
-   URLから最初の画像を読み込む
-*/
 
 if (initialImageURL) {
 
@@ -2133,11 +1858,6 @@ else {
 
 }
 
-
-/*
-   念のため、すでにlocalStorageに
-   自分宛ての要求があれば確認する。
-*/
 
 setTimeout(
     function () {
