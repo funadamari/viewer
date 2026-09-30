@@ -354,10 +354,6 @@ const ACTIVE_VIEWER_KEY =
     "funadamariActiveViewer";
 
 
-const REQUEST_VALID_TIME =
-    30 * 1000;
-
-
 /*
    viewerの名前
 
@@ -983,6 +979,18 @@ function registerAsActiveViewer() {
 
 }
 
+/* =========================================================
+   Active Viewer定期更新
+   ========================================================= */
+
+setInterval(
+  function () {
+
+    registerAsActiveViewer();
+
+  },
+  10000
+);
 
 /* =========================================================
    Active viewer解除
