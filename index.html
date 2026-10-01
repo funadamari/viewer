@@ -286,37 +286,6 @@ const REQUEST_VALID_TIME =
 const VIEWER_STORAGE_KEY =
     "funadamariViewerRequest";
 
-/* =========================================================
-   Service Worker
-   launcherからの画像変更要求を受け取る
-========================================================= */
-
-if ("serviceWorker" in navigator) {
-
-    navigator.serviceWorker.register(
-        "/sw.js",
-        {
-            scope: "/"
-        }
-    )
-    .then(function (registration) {
-
-        console.log(
-            "Service Worker registered:",
-            registration.scope
-        );
-
-    })
-    .catch(function (error) {
-
-        console.error(
-            "Service Worker registration failed:",
-            error
-        );
-
-    });
-
-      
 const ACTIVE_VIEWER_KEY =
     "funadamariActiveViewer";
 
@@ -944,25 +913,6 @@ if ("serviceWorker" in navigator) {
 
 
             /* ------------------------------------------------
-               viewer自身を前面にする
-               ------------------------------------------------ */
-
-            try {
-
-                window.focus();
-
-            }
-            catch (error) {
-
-                console.warn(
-                    "window.focus() failed:",
-                    error
-                );
-
-            }
-
-
-            /* ------------------------------------------------
                新しい画像を読み込む
                ------------------------------------------------ */
 
@@ -975,7 +925,7 @@ if ("serviceWorker" in navigator) {
     );
 
 }
-
+      
 /* =========================================================
    Service Worker登録
 ========================================================= */
