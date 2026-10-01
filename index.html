@@ -836,33 +836,38 @@ function loadImage(
         new Image();
 
 
-    newImage.onload =
-        function () {
+newImage.onload =
+    function () {
 
-            image.src =
-                imageURL;
+        image.src =
+            imageURL;
 
+        image.alt =
+            imageTitle || "";
 
-            image.alt =
-                imageTitle || "";
+        titleElement.textContent =
+            imageTitle || "";
 
+        loading.style.display =
+            "none";
 
-            titleElement.textContent =
-                imageTitle || "";
-
-
-            loading.style.display =
-                "none";
-
-
-            image.style.display =
-                "block";
+        image.style.display =
+            "block";
 
 
-            resetView();
+        /*
+           表示用imageのnaturalWidthが
+           確定するのを待ってから初期位置を計算する。
+        */
+        requestAnimationFrame(
+            function () {
 
-        };
+                resetView();
 
+            }
+        );
+
+    };
 
     newImage.onerror =
         function () {
