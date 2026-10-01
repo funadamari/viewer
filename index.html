@@ -276,7 +276,9 @@ const DOUBLE_TAP_DISTANCE = 30;
 
 const TAP_MOVE_THRESHOLD = 12;
 
-
+const REQUEST_VALID_TIME =
+    30 * 1000;
+      
 /*
    launcherとの通信
 */
@@ -314,58 +316,6 @@ if ("serviceWorker" in navigator) {
 
     });
 
-navigator.serviceWorker.addEventListener(
-  "message",
-  function (event) {
-
-    const data = event.data;
-
-    if (!data) {
-      return;
-    }
-
-    if (
-      data.type !==
-      "funadamariSetImage"
-    ) {
-      return;
-    }
-
-    if (!data.image) {
-      return;
-    }
-
-
-    /*
-     * viewer自身を前面にする
-     */
-
-    try {
-
-      window.focus();
-
-    }
-    catch (error) {
-
-      console.warn(
-        "window.focus() failed:",
-        error
-      );
-
-    }
-
-
-    /*
-     * 画像を変更
-     */
-
-    loadImage(
-      data.image,
-      data.title || ""
-    );
-
-  }
-);
       
 const ACTIVE_VIEWER_KEY =
     "funadamariActiveViewer";
@@ -962,7 +912,105 @@ function loadImage(
 
 }
 
+/* =========================================================
+   Service Workerからの画像変更要求
+========================================================= */
 
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker.addEventListener(
+        "message",
+        function (event) {
+
+            const data =
+                event.data;
+
+            if (!data) {
+                return;
+            }
+
+
+            if (
+                data.type !==
+                "funadamariSetImage"
+            ) {
+                return;
+            }
+
+
+            if (!data.image) {
+                return;
+            }
+
+
+            /* ------------------------------------------------
+               viewer自身を前面にする
+               ------------------------------------------------ */
+
+            try {
+
+                window.focus();
+
+            }
+            catch (error) {
+
+                console.warn(
+                    "window.focus() failed:",
+                    error
+                );
+
+            }
+
+
+            /* ------------------------------------------------
+               新しい画像を読み込む
+               ------------------------------------------------ */
+
+            loadImage(
+                data.image,
+                data.title || ""
+            );
+
+        }
+    );
+
+}
+
+/* =========================================================
+   Service Worker登録
+========================================================= */
+
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker.register(
+        "/sw.js",
+        {
+            scope: "/"
+        }
+    )
+    .then(
+        function (registration) {
+
+            console.log(
+                "Service Worker registered:",
+                registration.scope
+            );
+
+        }
+    )
+    .catch(
+        function (error) {
+
+            console.error(
+                "Service Worker registration failed:",
+                error
+            );
+
+        }
+    );
+
+}
+      
 /* =========================================================
    Active viewer登録
 ========================================================= */
