@@ -920,7 +920,24 @@ if ("serviceWorker" in navigator) {
                 data.image,
                 data.title || ""
             );
-
+            
+            setTimeout(function () {
+            
+                try {
+            
+                    window.focus();
+            
+                }
+                catch (error) {
+            
+                    console.warn(
+                        "window.focus() failed:",
+                        error
+                    );
+            
+                }
+            
+            }, 100);
         }
     );
 
