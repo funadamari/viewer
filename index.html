@@ -314,42 +314,59 @@ if ("serviceWorker" in navigator) {
 
     });
 
+navigator.serviceWorker.addEventListener(
+  "message",
+  function (event) {
 
-    navigator.serviceWorker.addEventListener(
-        "message",
-        function (event) {
+    const data = event.data;
 
-            const data =
-                event.data;
+    if (!data) {
+      return;
+    }
 
-            if (!data) {
-                return;
-            }
+    if (
+      data.type !==
+      "funadamariSetImage"
+    ) {
+      return;
+    }
 
-
-            if (
-                data.type !==
-                "funadamariSetImage"
-            ) {
-                return;
-            }
-
-
-            if (!data.image) {
-                return;
-            }
+    if (!data.image) {
+      return;
+    }
 
 
-            loadImage(
-                data.image,
-                data.title || ""
-            );
+    /*
+     * viewer自身を前面にする
+     */
 
-        }
+    try {
+
+      window.focus();
+
+    }
+    catch (error) {
+
+      console.warn(
+        "window.focus() failed:",
+        error
+      );
+
+    }
+
+
+    /*
+     * 画像を変更
+     */
+
+    loadImage(
+      data.image,
+      data.title || ""
     );
 
-}
-
+  }
+);
+      
 const ACTIVE_VIEWER_KEY =
     "funadamariActiveViewer";
 
