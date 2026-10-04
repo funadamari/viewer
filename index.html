@@ -611,13 +611,27 @@ function calculateFitScale() {
         viewer.clientHeight;
 
 
-    if (window.visualViewport) {
+    if (
+        window.visualViewport &&
+        window.visualViewport.width > 0 &&
+        window.visualViewport.height > 0
+    ) {
 
         viewportWidth =
             window.visualViewport.width;
 
         viewportHeight =
             window.visualViewport.height;
+
+    }
+
+
+    if (
+        viewportWidth <= 0 ||
+        viewportHeight <= 0
+    ) {
+
+        return 1;
 
     }
 
