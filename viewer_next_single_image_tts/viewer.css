@@ -1,17 +1,17 @@
+* {
+  box-sizing: border-box;
+}
 html,
 body {
   width: 100%;
   height: 100%;
   margin: 0;
-  background: #000;
   overflow: hidden;
+  background: #000;
 }
-
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #fff;
+  font-family: sans-serif;
 }
-
 #viewer {
   position: fixed;
   inset: 0;
@@ -19,7 +19,6 @@ body {
   background: #000;
   touch-action: none;
 }
-
 #image {
   position: absolute;
   left: 0;
@@ -29,116 +28,102 @@ body {
   transform-origin: 0 0;
   user-select: none;
   -webkit-user-drag: none;
-  touch-action: none;
 }
-
 #title {
   position: fixed;
-  left: 12px;
-  top: 10px;
+  top: 12px;
+  left: 14px;
   z-index: 10;
-  max-width: calc(100vw - 24px);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
   padding: 6px 10px;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
   font-size: 16px;
-  line-height: 1.4;
   pointer-events: none;
 }
-
 #speechPanel {
   position: fixed;
-  left: 12px;
-  bottom: 12px;
+  left: 14px;
+  bottom: 14px;
   z-index: 20;
-  width: min(520px, calc(100vw - 24px));
-  box-sizing: border-box;
-  padding: 10px;
+  width: min(520px, calc(100vw - 28px));
+  max-height: 42vh;
+  overflow: auto;
+  color: #111;
+  background: rgba(255, 255, 255, 0.94);
   border-radius: 10px;
-  background: rgba(30, 30, 30, 0.88);
-  backdrop-filter: blur(4px);
-  color: #fff;
+  padding: 12px;
+  touch-action: auto;
 }
-
 .panelTitle {
   font-weight: 700;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
-
 #speechText {
-  max-height: 130px;
-  overflow: auto;
-  margin-bottom: 8px;
-  font-size: 14px;
-  line-height: 1.6;
   white-space: pre-wrap;
+  line-height: 1.55;
+  font-size: 15px;
 }
-
-.speechControls,
-.voiceRow,
-.rateRow {
+.speechControls {
   display: flex;
-  align-items: center;
   gap: 6px;
-  margin-top: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
 }
-
-.speechControls button,
-.voiceRow select,
-#zoomControls button {
-  border: 1px solid rgba(255, 255, 255, 0.35);
+button,
+select,
+input {
+  font: inherit;
+}
+button {
+  border: 0;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  padding: 7px 10px;
   cursor: pointer;
 }
-
-.speechControls button {
-  padding: 6px 9px;
+.voiceRow,
+.rateRow {
+  display: block;
+  margin-top: 8px;
 }
-
-.voiceRow select {
-  min-width: 0;
-  flex: 1;
-  padding: 5px;
-  background: #222;
+#voiceSelect {
+  width: 100%;
+  margin-top: 4px;
 }
-
-.rateRow input {
-  flex: 1;
+#rateSlider {
+  width: 100%;
+  vertical-align: middle;
 }
-
 #zoomControls {
   position: fixed;
-  right: 12px;
-  bottom: 12px;
+  right: 14px;
+  bottom: 14px;
   z-index: 30;
   display: flex;
   gap: 6px;
 }
-
 #zoomControls button {
   width: 42px;
   height: 42px;
+  padding: 0;
   font-size: 22px;
+  background: rgba(255, 255, 255, 0.88);
 }
-
+#close {
+  font-size: 25px !important;
+}
 @media (max-width: 600px) {
-  #title {
+  #speechPanel {
+    max-height: 36vh;
+  }
+  #speechText {
     font-size: 14px;
   }
-
-  #speechPanel {
-    bottom: 62px;
-    max-height: 42vh;
+  #zoomControls {
+    bottom: calc(36vh + 22px);
+    right: 10px;
   }
-
-  #speechText {
-    max-height: 100px;
-  }
-
-  .speechControls {
-    flex-wrap: wrap;
+  #title {
+    font-size: 14px;
   }
 }
