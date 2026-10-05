@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no">
+  <title>ふなだまり 次期Viewer 試作</title>
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+  <div id="viewer">
+    <img id="image" alt="">
+    <div id="title"></div>
+
+    <div id="speechPanel">
+      <div class="panelTitle">説明</div>
+      <div id="speechText"></div>
+      <div class="speechControls">
+        <button id="playButton">▶ 読み上げ</button>
+        <button id="pauseButton">⏸ 一時停止</button>
+        <button id="stopButton">■ 停止</button>
+      </div>
+      <label class="voiceRow">
+        音声
+        <select id="voiceSelect"></select>
+      </label>
+      <label class="rateRow">
+        速度 <span id="rateValue">1.0</span>倍
+        <input id="rateSlider" type="range" min="0.5" max="2" step="0.1" value="1">
+      </label>
+    </div>
+
+    <div id="zoomControls">
+      <button id="zoomOut">−</button>
+      <button id="reset">↺</button>
+      <button id="zoomIn">＋</button>
+      <button id="close">×</button>
+    </div>
+  </div>
+
+  <script src="viewer.js"></script>
+</body>
+</html>
