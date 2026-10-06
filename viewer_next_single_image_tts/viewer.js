@@ -1,78 +1,86 @@
 "use strict";
 
-/*
- * ふなだまり 次期Viewer 試作版
- *
- * 機能
- * ・1枚の画像表示
- * ・画像の拡大／縮小
- * ・ドラッグ移動
- * ・PCのマウスホイールズーム
- * ・スマートフォンのピンチズーム
- * ・PCのダブルクリック／スマートフォンのダブルタップ
- * ・初期表示 90%
- * ・画像位置のリセット
- * ・説明文表示
- * ・Web Speech APIによる音声読み上げ
- * ・音声の選択
- * ・読み上げ速度変更
- *
- * URLパラメータ
- *
- * ?image=画像URL
- * &title=タイトル
- * &text=説明文
- *
- * 例：
- * viewer.html?image=https%3A%2F%2Fexample.com%2Ftest.jpg
- * &title=斃死魚等の数と水温、気温の関係
- * &text=ここに説明文を入れます。
- */
 
-
-/* =========================================================
-   DOM要素
-   ========================================================= */
-
-const viewer = document.getElementById("viewer");
-const image = document.getElementById("image");
-const title = document.getElementById("title");
-
-const speechText = document.getElementById("speechText");
-
-const playButton = document.getElementById("playButton");
-const pauseButton = document.getElementById("pauseButton");
-const stopButton = document.getElementById("stopButton");
-
-const voiceSelect = document.getElementById("voiceSelect");
-
-const rateSlider = document.getElementById("rateSlider");
-const rateValue = document.getElementById("rateValue");
-
-const zoomOutButton = document.getElementById("zoomOut");
-const resetButton = document.getElementById("reset");
-const zoomInButton = document.getElementById("zoomIn");
-const closeButton = document.getElementById("close");
-
-
-/* =========================================================
+/* ========================================
    URLパラメータ
-   ========================================================= */
+======================================== */
 
 const params = new URLSearchParams(window.location.search);
 
 const imageURL = params.get("image") || "";
 const imageTitle = params.get("title") || "";
-const explanationText = params.get("text") || "";
+const audioURL = params.get("audio") || "";
 
 
-/* =========================================================
-   初期設定
-   ========================================================= */
+/* ========================================
+   DOM
+======================================== */
+
+const image = document.getElementById("image");
+const imageArea = document.getElementById("imageArea");
+const imageStage = document.getElementById("imageStage");
+const title = document.getElementById("title");
+
+const zoomOutButton = document.getElementById("zoomOut");
+const zoomInButton = document.getElementById("zoomIn");
+const resetButton = document.getElementById("reset");
+const closeButton = document.getElementById("close");
+
+const audio = document.getElementById("audio");
+
+const playButton = document.getElementById("play");
+const pauseButton = document.getElementById("pause");
+const back5Button = document.getElementById("back5");
+const forward5Button = document.getElementById("forward5");
+
+const progress = document.getElementById("progress");
+
+const currentTimeText = document.getElementById("currentTime");
+const durationText = document.getElementById("duration");
+
+const volume = document.getElementById("volume");
+const rate = document.getElementById("rate");
+
+
+/* ========================================
+   画像表示
+======================================== */
+
+if (imageTitle) {
+    title.textContent = imageTitle;
+} else {
+    title.style.display = "none";
+}
+
+
+if (imageURL) {
+    image.src = imageURL;
+}
+
+
+/* ========================================
+   音声
+======================================== */
+
+if (audioURL) {
+    audio.src = audioURL;
+} else {
+    document.getElementById("audioPanel").style.display = "none";
+}
+
+
+/* ========================================
+   画像ズーム設定
+======================================== */
 
 const INITIAL_SCALE = 0.90;
 
-const MIN_SCALE = 0.40;
+/*
+ * ここを小さくすることで、
+ * 初期表示よりさらに縮小できます。
+ */
+const MIN_SCALE = 0.10;
+
 const MAX_SCALE = 5.00;
 
 const ZOOM_STEP = 1.20;
@@ -80,14 +88,15 @@ const ZOOM_STEP = 1.20;
 const DOUBLE_TAP_SCALE = 2.00;
 
 const DOUBLE_TAP_TIME = 350;
+
 const DOUBLE_TAP_DISTANCE = 30;
 
 const TAP_MOVE_THRESHOLD = 12;
 
 
-/* =========================================================
-   画像表示状態
-   ========================================================= */
+/* ========================================
+   画像状態
+======================================== */
 
 let fitScale = 1;
 
@@ -97,183 +106,98 @@ let translateX = 0;
 let translateY = 0;
 
 
-/* =========================================================
-   ポインター操作用状態
-   ========================================================= */
-
-const pointers = new Map();
-
-let isDragging = false;
-
-let dragStartX = 0;
-let dragStartY = 0;
-
-let dragStartTranslateX = 0;
-let dragStartTranslateY = 0;
-
-let pinchStartDistance = 0;
-let pinchStartScale = 1;
-
-let pinchCenterX = 0;
-let pinchCenterY = 0;
-
-
-/* =========================================================
-   ダブルタップ判定用
-   ========================================================= */
-
-let lastTapTime = 0;
-let lastTapX = 0;
-let lastTapY = 0;
-
-
-/* =========================================================
-   音声読み上げ用
-   ========================================================= */
-
-let voices = [];
-
-let speechUtterance = null;
-
-
-/* =========================================================
-   ページタイトル
-   ========================================================= */
-
-if (imageTitle) {
-    title.textContent = imageTitle;
-} else {
-    title.textContent = "";
-}
-
-
-/* =========================================================
-   説明文
-   ========================================================= */
-
-if (explanationText) {
-    speechText.textContent = explanationText;
-} else {
-    speechText.textContent = "説明文はありません。";
-}
-
-
-/* =========================================================
-   画像読み込み
-   ========================================================= */
-
-function loadImage() {
-    if (!imageURL) {
-        console.warn("画像URLが指定されていません。");
-        return;
-    }
-
-    const preloader = new Image();
-
-    preloader.onload = function () {
-        image.src = imageURL;
-
-        image.style.display = "block";
-
-        requestAnimationFrame(function () {
-            resetView();
-        });
-    };
-
-    preloader.onerror = function () {
-        console.error("画像を読み込めませんでした:", imageURL);
-    };
-
-    preloader.src = imageURL;
-}
-
-
-/* =========================================================
-   表示領域の取得
-   ========================================================= */
+/* ========================================
+   viewport取得
+======================================== */
 
 function getViewportSize() {
-    let viewportWidth = window.innerWidth;
-    let viewportHeight = window.innerHeight;
 
-    /*
-     * visualViewportが利用可能で、
-     * 有効なサイズが取得できる場合はこちらを使用する。
-     *
-     * ただし、ページ表示直後などに0になる場合があるため、
-     * 0の場合はinnerWidth / innerHeightを使用する。
-     */
+    let width = imageStage.clientWidth;
+    let height = imageStage.clientHeight;
 
     if (
         window.visualViewport &&
         window.visualViewport.width > 0 &&
         window.visualViewport.height > 0
     ) {
-        viewportWidth = window.visualViewport.width;
-        viewportHeight = window.visualViewport.height;
-    }
-
-    if (viewportWidth <= 0 || viewportHeight <= 0) {
-        viewportWidth = 1;
-        viewportHeight = 1;
+        width = imageStage.clientWidth;
+        height = imageStage.clientHeight;
     }
 
     return {
-        width: viewportWidth,
-        height: viewportHeight,
+        width,
+        height
     };
 }
 
 
-/* =========================================================
-   初期フィット倍率の計算
-   ========================================================= */
+/* ========================================
+   Fit Scale
+======================================== */
 
 function calculateFitScale() {
+
     const viewport = getViewportSize();
 
     const viewportWidth = viewport.width;
     const viewportHeight = viewport.height;
 
-    const imageWidth = image.naturalWidth;
-    const imageHeight = image.naturalHeight;
-
     if (
-        imageWidth <= 0 ||
-        imageHeight <= 0 ||
         viewportWidth <= 0 ||
-        viewportHeight <= 0
+        viewportHeight <= 0 ||
+        !image.naturalWidth ||
+        !image.naturalHeight
     ) {
         return 1;
     }
 
-    const widthScale = viewportWidth / imageWidth;
-    const heightScale = viewportHeight / imageHeight;
+    const scaleX = viewportWidth / image.naturalWidth;
+    const scaleY = viewportHeight / image.naturalHeight;
 
-    return Math.min(widthScale, heightScale);
+    return Math.min(scaleX, scaleY);
 }
 
 
-/* =========================================================
-   画像位置の制限
-   ========================================================= */
+/* ========================================
+   画像サイズ取得
+======================================== */
+
+function getScaledImageSize() {
+
+    return {
+        width: image.naturalWidth * scale,
+        height: image.naturalHeight * scale
+    };
+}
+
+
+/* ========================================
+   移動範囲制限
+======================================== */
 
 function clampTranslation() {
+
     const viewport = getViewportSize();
 
     const viewportWidth = viewport.width;
     const viewportHeight = viewport.height;
 
-    const imageWidth = image.naturalWidth * scale;
-    const imageHeight = image.naturalHeight * scale;
+    const size = getScaledImageSize();
+
+    const imageWidth = size.width;
+    const imageHeight = size.height;
+
 
     /*
-     * 画像が画面より小さい場合は中央配置
+     * 横方向
      */
 
     if (imageWidth <= viewportWidth) {
+
         translateX = (viewportWidth - imageWidth) / 2;
+
     } else {
+
         const minX = viewportWidth - imageWidth;
 
         const maxX = 0;
@@ -284,9 +208,17 @@ function clampTranslation() {
         );
     }
 
+
+    /*
+     * 縦方向
+     */
+
     if (imageHeight <= viewportHeight) {
+
         translateY = (viewportHeight - imageHeight) / 2;
+
     } else {
+
         const minY = viewportHeight - imageHeight;
 
         const maxY = 0;
@@ -299,48 +231,33 @@ function clampTranslation() {
 }
 
 
-/* =========================================================
-   画像変形の適用
-   ========================================================= */
+/* ========================================
+   Transform
+======================================== */
 
 function applyTransform() {
+
     clampTranslation();
 
     image.style.transform =
-        "translate(" +
-        translateX +
-        "px, " +
-        translateY +
-        "px) scale(" +
-        scale +
-        ")";
+        `translate(${translateX}px, ${translateY}px) scale(${scale})`;
 }
 
 
-/* =========================================================
-   表示状態のリセット
-   ========================================================= */
+/* ========================================
+   初期表示
+======================================== */
 
 function resetView() {
-    fitScale = calculateFitScale();
 
-    /*
-     * 初期表示は画面いっぱいに収まる倍率の90%
-     */
+    fitScale = calculateFitScale();
 
     scale = fitScale * INITIAL_SCALE;
 
     /*
-     * 極端に小さくならないようにする
+     * 極端に小さい画像などの場合の保護
      */
-
-    if (scale < MIN_SCALE) {
-        scale = MIN_SCALE;
-    }
-
-    if (scale > MAX_SCALE) {
-        scale = MAX_SCALE;
-    }
+    scale = Math.max(MIN_SCALE, scale);
 
     translateX = 0;
     translateY = 0;
@@ -349,242 +266,298 @@ function resetView() {
 }
 
 
-/* =========================================================
-   ズーム
-   ========================================================= */
+/* ========================================
+   画像読み込み
+======================================== */
 
-function zoomAt(
-    newScale,
-    centerX,
-    centerY
-) {
-    const oldScale = scale;
+image.addEventListener("load", () => {
+
+    requestAnimationFrame(() => {
+
+        requestAnimationFrame(() => {
+
+            resetView();
+
+        });
+
+    });
+
+});
+
+
+/* ========================================
+   ウィンドウサイズ変更
+======================================== */
+
+window.addEventListener("resize", () => {
+
+    if (!image.naturalWidth) {
+        return;
+    }
+
+    applyTransform();
+
+});
+
+
+if (window.visualViewport) {
+
+    window.visualViewport.addEventListener(
+        "resize",
+        () => {
+
+            if (!image.naturalWidth) {
+                return;
+            }
+
+            applyTransform();
+
+        }
+    );
+
+}
+
+
+/* ========================================
+   ズーム
+======================================== */
+
+function zoomTo(newScale, centerX, centerY) {
 
     newScale = Math.max(
         MIN_SCALE,
         Math.min(MAX_SCALE, newScale)
     );
 
-    if (newScale === oldScale) {
-        return;
-    }
 
     /*
-     * 指定した位置を中心にズームする。
+     * 指定位置を中心にズームする
      */
 
-    const imageX =
-        (centerX - translateX) / oldScale;
+    const oldScale = scale;
 
-    const imageY =
-        (centerY - translateY) / oldScale;
+    const ratio = newScale / oldScale;
+
+
+    if (
+        Number.isFinite(centerX) &&
+        Number.isFinite(centerY)
+    ) {
+
+        translateX =
+            centerX -
+            (centerX - translateX) * ratio;
+
+        translateY =
+            centerY -
+            (centerY - translateY) * ratio;
+
+    }
+
 
     scale = newScale;
-
-    translateX =
-        centerX - imageX * scale;
-
-    translateY =
-        centerY - imageY * scale;
 
     applyTransform();
 }
 
 
-/* =========================================================
-   ＋ボタン
-   ========================================================= */
+function zoomIn() {
 
-zoomInButton.addEventListener(
-    "click",
-    function () {
-        const viewport = getViewportSize();
+    const viewport = getViewportSize();
 
-        const centerX = viewport.width / 2;
-        const centerY = viewport.height / 2;
-
-        zoomAt(
-            scale * ZOOM_STEP,
-            centerX,
-            centerY
-        );
-    }
-);
+    zoomTo(
+        scale * ZOOM_STEP,
+        viewport.width / 2,
+        viewport.height / 2
+    );
+}
 
 
-/* =========================================================
-   −ボタン
-   ========================================================= */
+function zoomOut() {
 
-zoomOutButton.addEventListener(
-    "click",
-    function () {
-        const viewport = getViewportSize();
+    const viewport = getViewportSize();
 
-        const centerX = viewport.width / 2;
-        const centerY = viewport.height / 2;
-
-        zoomAt(
-            scale / ZOOM_STEP,
-            centerX,
-            centerY
-        );
-    }
-);
+    zoomTo(
+        scale / ZOOM_STEP,
+        viewport.width / 2,
+        viewport.height / 2
+    );
+}
 
 
-/* =========================================================
-   リセットボタン
-   ========================================================= */
+zoomInButton.addEventListener("click", zoomIn);
 
-resetButton.addEventListener(
-    "click",
-    function () {
-        resetView();
-    }
-);
+zoomOutButton.addEventListener("click", zoomOut);
+
+resetButton.addEventListener("click", resetView);
 
 
-/* =========================================================
-   マウスホイールズーム
-   ========================================================= */
+/* ========================================
+   マウスホイール
+======================================== */
 
-viewer.addEventListener(
+imageStage.addEventListener(
     "wheel",
-    function (event) {
+    (event) => {
+
         event.preventDefault();
 
-        const rect = viewer.getBoundingClientRect();
 
-        const x =
-            event.clientX - rect.left;
+        const rect = imageStage.getBoundingClientRect();
 
-        const y =
-            event.clientY - rect.top;
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
 
         if (event.deltaY < 0) {
-            zoomAt(
+
+            zoomTo(
                 scale * ZOOM_STEP,
                 x,
                 y
             );
+
         } else {
-            zoomAt(
+
+            zoomTo(
                 scale / ZOOM_STEP,
                 x,
                 y
             );
+
         }
+
     },
     {
-        passive: false,
+        passive: false
     }
 );
 
 
-/* =========================================================
-   ポインター開始
-   ========================================================= */
+/* ========================================
+   Pointer操作
+======================================== */
 
-image.addEventListener(
+const pointers = new Map();
+
+let dragStartX = 0;
+let dragStartY = 0;
+
+let startTranslateX = 0;
+let startTranslateY = 0;
+
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+
+let lastTapTime = 0;
+
+let lastTapX = 0;
+let lastTapY = 0;
+
+let moved = false;
+
+
+function getPointerDistance() {
+
+    const points = [...pointers.values()];
+
+    if (points.length < 2) {
+        return 0;
+    }
+
+    const dx =
+        points[0].x -
+        points[1].x;
+
+    const dy =
+        points[0].y -
+        points[1].y;
+
+    return Math.sqrt(
+        dx * dx +
+        dy * dy
+    );
+}
+
+
+imageStage.addEventListener(
     "pointerdown",
-    function (event) {
-        event.preventDefault();
-
-        image.setPointerCapture(event.pointerId);
+    (event) => {
 
         pointers.set(
             event.pointerId,
             {
                 x: event.clientX,
-                y: event.clientY,
+                y: event.clientY
             }
         );
 
+        image.setPointerCapture(event.pointerId);
+
+        moved = false;
+
+
         /*
-         * 2本指になった場合はピンチズーム開始
+         * ピンチ開始
          */
 
         if (pointers.size === 2) {
-            const points = Array.from(
-                pointers.values()
-            );
 
             pinchStartDistance =
-                distance(
-                    points[0],
-                    points[1]
-                );
+                getPointerDistance();
 
-            pinchStartScale = scale;
-
-            const center =
-                midpoint(
-                    points[0],
-                    points[1]
-                );
-
-            pinchCenterX = center.x;
-            pinchCenterY = center.y;
-
-            isDragging = false;
+            pinchStartScale =
+                scale;
 
             return;
         }
 
+
         /*
-         * 1本指の場合
+         * ドラッグ開始
          */
 
         if (pointers.size === 1) {
-            isDragging = true;
 
             dragStartX = event.clientX;
             dragStartY = event.clientY;
 
-            dragStartTranslateX =
-                translateX;
+            startTranslateX = translateX;
+            startTranslateY = translateY;
 
-            dragStartTranslateY =
-                translateY;
+            image.classList.add("dragging");
         }
+
     }
 );
 
 
-/* =========================================================
-   ポインター移動
-   ========================================================= */
-
-image.addEventListener(
+imageStage.addEventListener(
     "pointermove",
-    function (event) {
+    (event) => {
+
         if (!pointers.has(event.pointerId)) {
             return;
         }
+
 
         pointers.set(
             event.pointerId,
             {
                 x: event.clientX,
-                y: event.clientY,
+                y: event.clientY
             }
         );
+
 
         /*
          * ピンチズーム
          */
 
         if (pointers.size === 2) {
-            const points = Array.from(
-                pointers.values()
-            );
 
-            const currentDistance =
-                distance(
-                    points[0],
-                    points[1]
-                );
+            const distance =
+                getPointerDistance();
 
             if (pinchStartDistance <= 0) {
                 return;
@@ -592,682 +565,379 @@ image.addEventListener(
 
             const newScale =
                 pinchStartScale *
-                (
-                    currentDistance /
-                    pinchStartDistance
-                );
+                (distance / pinchStartDistance);
 
-            zoomAt(
+            zoomTo(
                 newScale,
-                pinchCenterX,
-                pinchCenterY
+                imageStage.clientWidth / 2,
+                imageStage.clientHeight / 2
             );
+
+            moved = true;
 
             return;
         }
+
 
         /*
          * 1本指ドラッグ
          */
 
-        if (
-            pointers.size === 1 &&
-            isDragging
-        ) {
-            const deltaX =
+        if (pointers.size === 1) {
+
+            const dx =
                 event.clientX - dragStartX;
 
-            const deltaY =
+            const dy =
                 event.clientY - dragStartY;
 
+
+            if (
+                Math.abs(dx) > TAP_MOVE_THRESHOLD ||
+                Math.abs(dy) > TAP_MOVE_THRESHOLD
+            ) {
+                moved = true;
+            }
+
+
             /*
-             * 画像が拡大されている場合はドラッグ可能
+             * 画像が画面より大きいときだけ
+             * ドラッグする
              */
 
             translateX =
-                dragStartTranslateX + deltaX;
+                startTranslateX + dx;
 
             translateY =
-                dragStartTranslateY + deltaY;
+                startTranslateY + dy;
 
             applyTransform();
         }
+
     }
 );
 
-
-/* =========================================================
-   ポインター終了
-   ========================================================= */
-
-image.addEventListener(
-    "pointerup",
-    function (event) {
-        handlePointerEnd(event);
-    }
-);
-
-image.addEventListener(
-    "pointercancel",
-    function (event) {
-        handlePointerEnd(event);
-    }
-);
-
-image.addEventListener(
-    "pointerleave",
-    function (event) {
-        /*
-         * pointerleaveでは通常処理しない。
-         * pointerup / pointercancelで終了させる。
-         */
-    }
-);
-
-
-/* =========================================================
-   ポインター終了処理
-   ========================================================= */
 
 function handlePointerEnd(event) {
+
     pointers.delete(event.pointerId);
 
+    image.classList.remove("dragging");
+
+
     /*
-     * 2本指から1本指に戻った場合
+     * ピンチ終了後
      */
 
     if (pointers.size === 1) {
-        const point =
-            Array.from(
-                pointers.values()
-            )[0];
 
-        dragStartX = point.x;
-        dragStartY = point.y;
+        const remaining =
+            [...pointers.values()][0];
 
-        dragStartTranslateX =
-            translateX;
+        dragStartX = remaining.x;
+        dragStartY = remaining.y;
 
-        dragStartTranslateY =
-            translateY;
-
-        isDragging = true;
-
-        return;
+        startTranslateX = translateX;
+        startTranslateY = translateY;
     }
 
-    /*
-     * ポインターがなくなった
-     */
-
-    if (pointers.size === 0) {
-        isDragging = false;
-    }
 }
 
 
-/* =========================================================
-   2点間の距離
-   ========================================================= */
+/* ========================================
+   ダブルタップ
+======================================== */
 
-function distance(point1, point2) {
-    const dx =
-        point1.x - point2.x;
-
-    const dy =
-        point1.y - point2.y;
-
-    return Math.sqrt(
-        dx * dx + dy * dy
-    );
-}
-
-
-/* =========================================================
-   2点の中点
-   ========================================================= */
-
-function midpoint(point1, point2) {
-    return {
-        x:
-            (point1.x + point2.x) / 2,
-
-        y:
-            (point1.y + point2.y) / 2,
-    };
-}
-
-
-/* =========================================================
-   ダブルクリック
-   ========================================================= */
-
-image.addEventListener(
-    "dblclick",
-    function (event) {
-        event.preventDefault();
-
-        const rect =
-            viewer.getBoundingClientRect();
-
-        const x =
-            event.clientX - rect.left;
-
-        const y =
-            event.clientY - rect.top;
-
-        if (
-            Math.abs(
-                scale -
-                fitScale * DOUBLE_TAP_SCALE
-            ) < 0.01
-        ) {
-            zoomAt(
-                fitScale * INITIAL_SCALE,
-                x,
-                y
-            );
-        } else {
-            zoomAt(
-                fitScale * DOUBLE_TAP_SCALE,
-                x,
-                y
-            );
-        }
-    }
-);
-
-
-/* =========================================================
-   タップによるダブルタップ判定
-   ========================================================= */
-
-image.addEventListener(
+imageStage.addEventListener(
     "pointerup",
-    function (event) {
-        /*
-         * マウスによるpointerupは
-         * dblclick側で処理する。
-         */
+    (event) => {
 
-        if (event.pointerType === "mouse") {
+        handlePointerEnd(event);
+
+
+        if (moved) {
             return;
         }
+
 
         const now = Date.now();
 
-        const x = event.clientX;
-        const y = event.clientY;
+        const dx =
+            event.clientX - lastTapX;
 
-        const timeDifference =
-            now - lastTapTime;
+        const dy =
+            event.clientY - lastTapY;
 
-        const distanceDifference =
-            Math.sqrt(
-                Math.pow(
-                    x - lastTapX,
-                    2
-                ) +
-                Math.pow(
-                    y - lastTapY,
-                    2
-                )
-            );
+        const distance =
+            Math.sqrt(dx * dx + dy * dy);
+
 
         if (
-            timeDifference <=
-                DOUBLE_TAP_TIME &&
-            distanceDifference <=
-                DOUBLE_TAP_DISTANCE
+            now - lastTapTime <= DOUBLE_TAP_TIME &&
+            distance <= DOUBLE_TAP_DISTANCE
         ) {
+
             const rect =
-                viewer.getBoundingClientRect();
+                imageStage.getBoundingClientRect();
 
-            const centerX =
-                x - rect.left;
+            const x =
+                event.clientX - rect.left;
 
-            const centerY =
-                y - rect.top;
+            const y =
+                event.clientY - rect.top;
+
 
             if (
-                Math.abs(
-                    scale -
-                    fitScale *
-                        DOUBLE_TAP_SCALE
-                ) < 0.01
+                Math.abs(scale - fitScale * INITIAL_SCALE) <
+                0.05
             ) {
-                zoomAt(
-                    fitScale *
-                        INITIAL_SCALE,
-                    centerX,
-                    centerY
+
+                zoomTo(
+                    Math.min(
+                        MAX_SCALE,
+                        fitScale * DOUBLE_TAP_SCALE
+                    ),
+                    x,
+                    y
                 );
+
             } else {
-                zoomAt(
-                    fitScale *
-                        DOUBLE_TAP_SCALE,
-                    centerX,
-                    centerY
-                );
+
+                resetView();
+
             }
+
 
             lastTapTime = 0;
 
-            return;
+        } else {
+
+            lastTapTime = now;
+
+            lastTapX = event.clientX;
+            lastTapY = event.clientY;
         }
 
-        lastTapTime = now;
-        lastTapX = x;
-        lastTapY = y;
     }
 );
 
 
-/* =========================================================
-   音声一覧の取得
-   ========================================================= */
+/* ========================================
+   音声：時間表示
+======================================== */
 
-function loadVoices() {
-    if (
-        !("speechSynthesis" in window)
-    ) {
-        return;
+function formatTime(seconds) {
+
+    if (!Number.isFinite(seconds)) {
+        return "0:00";
     }
 
-    voices =
-        window.speechSynthesis.getVoices();
+    const minutes =
+        Math.floor(seconds / 60);
 
-    voiceSelect.innerHTML = "";
+    const secs =
+        Math.floor(seconds % 60);
 
-    /*
-     * 日本語音声を優先して表示する。
-     */
-
-    const sortedVoices =
-        [...voices].sort(
-            function (a, b) {
-                const aJapanese =
-                    a.lang.toLowerCase()
-                        .startsWith("ja");
-
-                const bJapanese =
-                    b.lang.toLowerCase()
-                        .startsWith("ja");
-
-                if (
-                    aJapanese &&
-                    !bJapanese
-                ) {
-                    return -1;
-                }
-
-                if (
-                    !aJapanese &&
-                    bJapanese
-                ) {
-                    return 1;
-                }
-
-                return a.name.localeCompare(
-                    b.name
-                );
-            }
-        );
-
-    sortedVoices.forEach(
-        function (voice, index) {
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-            option.value = String(index);
-
-            option.textContent =
-                voice.name +
-                " (" +
-                voice.lang +
-                ")";
-
-            option.dataset.voiceName =
-                voice.name;
-
-            option.dataset.voiceLang =
-                voice.lang;
-
-            voiceSelect.appendChild(
-                option
-            );
-        }
-    );
-
-    /*
-     * 日本語音声を初期選択
-     */
-
-    const japaneseIndex =
-        sortedVoices.findIndex(
-            function (voice) {
-                return voice.lang
-                    .toLowerCase()
-                    .startsWith("ja");
-            }
-        );
-
-    if (japaneseIndex >= 0) {
-        voiceSelect.value =
-            String(japaneseIndex);
-    }
-}
-
-
-/* =========================================================
-   音声一覧の初期化
-   ========================================================= */
-
-if (
-    "speechSynthesis" in window
-) {
-    loadVoices();
-
-    /*
-     * Chromeなどでは、ページ読み込み直後には
-     * 音声一覧がまだ取得できないことがある。
-     */
-
-    window.speechSynthesis.onvoiceschanged =
-        loadVoices;
-} else {
-    voiceSelect.disabled = true;
-
-    playButton.disabled = true;
-    pauseButton.disabled = true;
-    stopButton.disabled = true;
-}
-
-
-/* =========================================================
-   読み上げ開始
-   ========================================================= */
-
-function startSpeech() {
-    if (
-        !("speechSynthesis" in window)
-    ) {
-        alert(
-            "このブラウザでは音声読み上げを利用できません。"
-        );
-
-        return;
-    }
-
-    if (!explanationText) {
-        return;
-    }
-
-    /*
-     * 現在の読み上げを停止
-     */
-
-    window.speechSynthesis.cancel();
-
-    speechUtterance =
-        new SpeechSynthesisUtterance(
-            explanationText
-        );
-
-    /*
-     * 読み上げ速度
-     */
-
-    speechUtterance.rate =
-        Number(rateSlider.value);
-
-    /*
-     * 日本語を基本設定
-     */
-
-    speechUtterance.lang =
-        "ja-JP";
-
-    /*
-     * 選択された音声を使用
-     */
-
-    const selectedIndex =
-        Number(voiceSelect.value);
-
-    if (
-        Number.isInteger(selectedIndex) &&
-        voices[selectedIndex]
-    ) {
-        speechUtterance.voice =
-            voices[selectedIndex];
-
-        speechUtterance.lang =
-            voices[selectedIndex].lang;
-    }
-
-    /*
-     * 読み上げ終了
-     */
-
-    speechUtterance.onend =
-        function () {
-            speechUtterance = null;
-        };
-
-    /*
-     * 読み上げエラー
-     */
-
-    speechUtterance.onerror =
-        function (event) {
-            console.warn(
-                "音声読み上げエラー:",
-                event
-            );
-
-            speechUtterance = null;
-        };
-
-    window.speechSynthesis.speak(
-        speechUtterance
+    return (
+        minutes +
+        ":" +
+        String(secs).padStart(2, "0")
     );
 }
 
 
-/* =========================================================
-   再生ボタン
-   ========================================================= */
+/* ========================================
+   音声：メタデータ読み込み
+======================================== */
+
+audio.addEventListener(
+    "loadedmetadata",
+    () => {
+
+        durationText.textContent =
+            formatTime(audio.duration);
+
+        progress.max =
+            audio.duration;
+
+        progress.value =
+            audio.currentTime;
+
+    }
+);
+
+
+/* ========================================
+   音声：再生位置更新
+======================================== */
+
+audio.addEventListener(
+    "timeupdate",
+    () => {
+
+        currentTimeText.textContent =
+            formatTime(audio.currentTime);
+
+        progress.value =
+            audio.currentTime;
+
+    }
+);
+
+
+/* ========================================
+   音声：再生
+======================================== */
 
 playButton.addEventListener(
     "click",
-    function () {
-        /*
-         * 一時停止中なら再開
-         */
+    () => {
 
-        if (
-            window.speechSynthesis &&
-            window.speechSynthesis.paused
-        ) {
-            window.speechSynthesis.resume();
+        audio.play().catch(() => {});
 
-            return;
-        }
-
-        startSpeech();
     }
 );
 
 
-/* =========================================================
-   一時停止ボタン
-   ========================================================= */
+/* ========================================
+   音声：一時停止
+======================================== */
 
 pauseButton.addEventListener(
     "click",
-    function () {
-        if (
-            "speechSynthesis" in window
-        ) {
-            window.speechSynthesis.pause();
-        }
+    () => {
+
+        audio.pause();
+
     }
 );
 
 
-/* =========================================================
-   停止ボタン
-   ========================================================= */
+/* ========================================
+   音声：5秒戻る
+======================================== */
 
-stopButton.addEventListener(
+back5Button.addEventListener(
     "click",
-    function () {
-        if (
-            "speechSynthesis" in window
-        ) {
-            window.speechSynthesis.cancel();
+    () => {
 
-            speechUtterance = null;
-        }
+        audio.currentTime =
+            Math.max(
+                0,
+                audio.currentTime - 5
+            );
+
     }
 );
 
 
-/* =========================================================
-   読み上げ速度
-   ========================================================= */
+/* ========================================
+   音声：5秒進む
+======================================== */
 
-rateSlider.addEventListener(
+forward5Button.addEventListener(
+    "click",
+    () => {
+
+        audio.currentTime =
+            Math.min(
+                audio.duration || 0,
+                audio.currentTime + 5
+            );
+
+    }
+);
+
+
+/* ========================================
+   音声：スライダー
+======================================== */
+
+progress.addEventListener(
     "input",
-    function () {
-        rateValue.textContent =
-            Number(
-                rateSlider.value
-            ).toFixed(1);
+    () => {
+
+        audio.currentTime =
+            Number(progress.value);
+
     }
 );
 
 
-/* =========================================================
-   閉じるボタン
-   ========================================================= */
+/* ========================================
+   音量
+======================================== */
+
+volume.addEventListener(
+    "input",
+    () => {
+
+        audio.volume =
+            Number(volume.value);
+
+    }
+);
+
+
+/* ========================================
+   再生速度
+======================================== */
+
+rate.addEventListener(
+    "change",
+    () => {
+
+        audio.playbackRate =
+            Number(rate.value);
+
+    }
+);
+
+
+/* ========================================
+   再生終了
+======================================== */
+
+audio.addEventListener(
+    "ended",
+    () => {
+
+        progress.value = 0;
+
+        currentTimeText.textContent =
+            "0:00";
+
+    }
+);
+
+
+/* ========================================
+   閉じる
+======================================== */
 
 closeButton.addEventListener(
     "click",
-    function () {
-        /*
-         * 音声停止
-         */
-
-        if (
-            "speechSynthesis" in window
-        ) {
-            window.speechSynthesis.cancel();
-        }
-
-        /*
-         * 自分自身のウィンドウを閉じる。
-         *
-         * ブラウザのセキュリティ上、
-         * スクリプトから閉じられない場合がある。
-         */
+    () => {
 
         try {
+
             window.close();
+
         } catch (error) {
-            console.warn(
-                "window.close() failed:",
-                error
-            );
+
+            // ブラウザによってwindow.close()が
+            // 禁止される場合があります。
+
         }
+
     }
 );
 
 
-/* =========================================================
-   画面サイズ変更
-   ========================================================= */
+/* ========================================
+   初期設定
+======================================== */
 
-let resizeTimer = null;
+audio.volume = 1;
 
-function handleViewportChange() {
-    clearTimeout(resizeTimer);
-
-    resizeTimer = setTimeout(
-        function () {
-            /*
-             * 回転などで画面サイズが変わった場合、
-             * 現在の画像位置をできるだけ維持する。
-             */
-
-            applyTransform();
-        },
-        100
-    );
-}
-
-
-window.addEventListener(
-    "resize",
-    handleViewportChange
-);
-
-
-if (window.visualViewport) {
-    window.visualViewport.addEventListener(
-        "resize",
-        handleViewportChange
-    );
-}
-
-
-/* =========================================================
-   画像のドラッグによるブラウザ標準動作防止
-   ========================================================= */
-
-image.addEventListener(
-    "dragstart",
-    function (event) {
-        event.preventDefault();
-    }
-);
-
-
-/* =========================================================
-   コンテキストメニュー
-   ========================================================= */
-
-viewer.addEventListener(
-    "contextmenu",
-    function (event) {
-        event.preventDefault();
-    }
-);
-
-
-/* =========================================================
-   ページ非表示時の音声停止
-   ========================================================= */
-
-document.addEventListener(
-    "visibilitychange",
-    function () {
-        /*
-         * 現段階では、ページを非表示にしても
-         * 読み上げは継続させる。
-         *
-         * 必要であれば将来、
-         * 「ページを離れたら停止」に変更可能。
-         */
-    }
-);
-
-
-/* =========================================================
-   初期化
-   ========================================================= */
-
-loadImage();
+audio.playbackRate = 1;
