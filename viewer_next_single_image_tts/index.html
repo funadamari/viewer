@@ -1,42 +1,160 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no">
-  <title>ふなだまり 次期Viewer 試作</title>
-  <link rel="stylesheet" href="viewer.css">
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no"
+    >
+
+    <title>ふなだまり 次期Viewer</title>
+
+    <link rel="stylesheet" href="viewer.css">
 </head>
+
 <body>
-  <div id="viewer">
-    <img id="image" alt="">
-    <div id="title"></div>
 
-    <div id="speechPanel">
-      <div class="panelTitle">説明</div>
-      <div id="speechText"></div>
-      <div class="speechControls">
-        <button id="playButton">▶ 読み上げ</button>
-        <button id="pauseButton">⏸ 一時停止</button>
-        <button id="stopButton">■ 停止</button>
-      </div>
-      <label class="voiceRow">
-        音声
-        <select id="voiceSelect"></select>
-      </label>
-      <label class="rateRow">
-        速度 <span id="rateValue">1.0</span>倍
-        <input id="rateSlider" type="range" min="0.5" max="2" step="0.1" value="1">
-      </label>
-    </div>
+<div id="viewer">
 
-    <div id="zoomControls">
-      <button id="zoomOut">−</button>
-      <button id="reset">↺</button>
-      <button id="zoomIn">＋</button>
-      <button id="close">×</button>
-    </div>
-  </div>
+    <!-- 画像表示領域 -->
+    <main id="imageArea">
 
-  <script src="viewer.js"></script>
+        <div id="imageStage">
+            <img id="image" alt="">
+        </div>
+
+        <div id="title"></div>
+
+        <!-- 画像操作ボタン -->
+        <div id="zoomControls">
+            <button id="zoomOut" aria-label="縮小">−</button>
+            <button id="reset" aria-label="リセット">↺</button>
+            <button id="zoomIn" aria-label="拡大">＋</button>
+            <button id="close" aria-label="閉じる">×</button>
+        </div>
+
+    </main>
+
+
+    <!-- 音声操作領域 -->
+    <aside id="audioPanel">
+
+        <audio id="audio" preload="metadata"></audio>
+
+        <div id="audioControls">
+
+            <!-- 5秒戻る -->
+            <button
+                id="back5"
+                class="audioButton"
+                aria-label="5秒戻る"
+                title="5秒戻る"
+            >
+                ↶
+            </button>
+
+            <!-- 再生 -->
+            <button
+                id="play"
+                class="audioButton large"
+                aria-label="再生"
+                title="再生"
+            >
+                ▶
+            </button>
+
+            <!-- 一時停止 -->
+            <button
+                id="pause"
+                class="audioButton large"
+                aria-label="一時停止"
+                title="一時停止"
+            >
+                ⏸
+            </button>
+
+            <!-- 5秒進む -->
+            <button
+                id="forward5"
+                class="audioButton"
+                aria-label="5秒進む"
+                title="5秒進む"
+            >
+                ↷
+            </button>
+
+        </div>
+
+
+        <!-- 再生位置 -->
+        <div id="progressRow">
+
+            <span id="currentTime">0:00</span>
+
+            <input
+                id="progress"
+                type="range"
+                min="0"
+                max="100"
+                value="0"
+                step="0.1"
+                aria-label="再生位置"
+            >
+
+            <span id="duration">0:00</span>
+
+        </div>
+
+
+        <!-- 音量・速度 -->
+        <div id="audioOptions">
+
+            <div class="optionGroup">
+
+                <span class="optionIcon" aria-hidden="true">
+                    🔊
+                </span>
+
+                <input
+                    id="volume"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="1"
+                    aria-label="音量"
+                >
+
+            </div>
+
+
+            <div class="optionGroup">
+
+                <span class="optionIcon" aria-hidden="true">
+                    ⏩
+                </span>
+
+                <select id="rate" aria-label="再生速度">
+
+                    <option value="0.75">0.75×</option>
+                    <option value="0.9">0.9×</option>
+                    <option value="1" selected>1.0×</option>
+                    <option value="1.1">1.1×</option>
+                    <option value="1.25">1.25×</option>
+                    <option value="1.5">1.5×</option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+</div>
+
+
+<script src="viewer.js"></script>
+
 </body>
 </html>
