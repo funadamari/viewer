@@ -646,24 +646,36 @@ function loadPage(index) {
   );
 }
 
+let lastPageNavigationTime = 0;
+
+function navigatePage(direction) {
+  const now = performance.now();
+
+  // 短時間の連続タップは1回だけ処理する
+  if (now - lastPageNavigationTime < 400) {
+    return;
+  }
+
+  lastPageNavigationTime = now;
+
+  loadPage(
+    currentPageIndex + direction
+  );
+}
+
 prevPageButton.addEventListener(
   "click",
   () => {
-    loadPage(
-      currentPageIndex - 1
-    );
+    navigatePage(-1);
   }
 );
 
 nextPageButton.addEventListener(
   "click",
   () => {
-    loadPage(
-      currentPageIndex + 1
-    );
+    navigatePage(1);
   }
 );
-
 zoomInButton.addEventListener(
   "click",
   zoomIn
