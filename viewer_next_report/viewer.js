@@ -468,8 +468,6 @@ function seekBy(seconds) {
 
 
 function initializeAudioControls() {
-  const audioURL = currentPageData.audio;
-
 
   audio.volume =
     Number(volume.value);
@@ -763,13 +761,6 @@ window.addEventListener(
     }
   }
 );
-
-
-title.textContent =
-  currentPageData.title;
-
-document.title =
-  currentPageData.title || "画像Viewer";
 
 
 initializeAudioControls();
