@@ -676,7 +676,22 @@ nextPageButton.addEventListener(
     navigatePage(1);
   }
 );
-zoomInButton.addEventListener(
+
+// ダブルタップによるブラウザの拡大を防止
+prevPageButton.addEventListener(
+  "dblclick",
+  (event) => {
+    event.preventDefault();
+  }
+);
+
+nextPageButton.addEventListener(
+  "dblclick",
+  (event) => {
+    event.preventDefault();
+  }
+  
+);zoomInButton.addEventListener(
   "click",
   zoomIn
 );
