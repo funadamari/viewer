@@ -276,7 +276,7 @@ body {
     min-width: 76px;
     height: 30px;
     font-size: 13px;
-    touch-action: manipulation;
+    touch-action: none;
   }
 
   #pageIndicator {
@@ -295,7 +295,7 @@ body {
   gap: 18px;
 
   background: #111;
-  touch-action: manipulation;
+  touch-action: none;
 }
 
 #pageNavigation button {
