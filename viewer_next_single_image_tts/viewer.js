@@ -226,6 +226,12 @@ function midpoint(a, b) {
 
 
 function handlePointerDown(event) {
+  // 画像コントロール上の操作は、
+  // 画像のドラッグ／ピンチ処理から除外する。
+  if (event.target.closest("#imageControls")) {
+    return;
+  }
+
   pointers.set(event.pointerId, event);
 
   try {
@@ -262,7 +268,6 @@ function handlePointerDown(event) {
     dragging = false;
   }
 }
-
 
 function handlePointerMove(event) {
   if (!pointers.has(event.pointerId)) {
