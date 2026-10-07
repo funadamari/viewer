@@ -1,9 +1,54 @@
 const params = new URLSearchParams(window.location.search);
 
-const imageURL = params.get("image") || "";
-const imageTitle = params.get("title") || "";
-const audioURL = params.get("audio") || "";
+const pages = [
+  {
+    page: 1,
+    title: "1ページ目",
+    image: "https://funadamari.github.io/env/images/perished_fish_sl-1.jpg",
+    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-1.mp3"
+  },
+  {
+    page: 2,
+    title: "2ページ目",
+    image: "https://funadamari.github.io/env/images/perished_fish_sl-2.jpg",
+    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-2.mp3"
+  },
+  {
+    page: 3,
+    title: "3ページ目",
+    image: "https://funadamari.github.io/env/images/perished_fish_sl-3.jpg",
+    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-3.mp3"
+  },
+  {
+    page: 4,
+    title: "4ページ目",
+    image: "https://funadamari.github.io/env/images/perished_fish_sl-4.jpg",
+    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-4.mp3"
+  },
+  {
+    page: 5,
+    title: "5ページ目",
+    image: "https://funadamari.github.io/env/images/perished_fish_sl-5.jpg",
+    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-5.mp3"
+  },
+  {
+    page: 6,
+    title: "6ページ目",
+    image: "https://funadamari.github.io/env/images/perished_fish_sl-6.jpg",
+    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-6.mp3"
+  }
+];
 
+let currentPage =
+  Math.min(
+    pages.length,
+    Math.max(
+      1,
+      Number(params.get("page")) || 1
+    )
+  );
+
+const currentPageData = pages[currentPage - 1];
 const image = document.getElementById("image");
 const title = document.getElementById("title");
 const imageStage = document.getElementById("imageStage");
@@ -418,6 +463,8 @@ function seekBy(seconds) {
 
 
 function initializeAudio() {
+  const audioURL = currentPageData.audio;
+
   if (!audioURL) {
     audioBar.style.display = "none";
     return;
@@ -507,8 +554,10 @@ function initializeAudio() {
   );
 }
 
-
 function initializeImage() {
+  const imageURL = currentPageData.image;
+  const imageTitle = currentPageData.title;
+
   if (!imageURL) {
     return;
   }
@@ -537,7 +586,6 @@ function initializeImage() {
 
   preload.src = imageURL;
 }
-
 
 zoomInButton.addEventListener(
   "click",
@@ -642,10 +690,11 @@ window.addEventListener(
 );
 
 
-title.textContent = imageTitle;
+title.textContent =
+  currentPageData.title;
 
 document.title =
-  imageTitle || "画像Viewer";
+  currentPageData.title || "画像Viewer";
 
 
 initializeAudio();
