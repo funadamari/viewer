@@ -48,7 +48,8 @@ let currentPage =
     )
   );
 
-const currentPageData = pages[currentPage - 1];
+let currentPageIndex = currentPage - 1;
+
 const image = document.getElementById("image");
 const title = document.getElementById("title");
 const imageStage = document.getElementById("imageStage");
@@ -57,6 +58,10 @@ const zoomInButton = document.getElementById("zoomIn");
 const zoomOutButton = document.getElementById("zoomOut");
 const resetViewButton = document.getElementById("resetView");
 const closeButton = document.getElementById("closeButton");
+
+const prevPageButton = document.getElementById("prevPage");
+const nextPageButton = document.getElementById("nextPage");
+const pageIndicator = document.getElementById("pageIndicator");
 
 const audioBar = document.getElementById("audioBar");
 const audio = document.getElementById("audio");
@@ -462,15 +467,9 @@ function seekBy(seconds) {
 }
 
 
-function initializeAudio() {
+function initializeAudioControls() {
   const audioURL = currentPageData.audio;
 
-  if (!audioURL) {
-    audioBar.style.display = "none";
-    return;
-  }
-
-  audio.src = audioURL;
 
   audio.volume =
     Number(volume.value);
@@ -554,11 +553,25 @@ function initializeAudio() {
   );
 }
 
-function initializeImage() {
-  const imageURL = currentPageData.image;
-  const imageTitle = currentPageData.title;
+function loadAudioForPage(pageData) {
+  audio.pause();
 
-  if (!imageURL) {
+  audio.currentTime = 0;
+
+  progress.value = "0";
+
+  audio.src = pageData.audio;
+
+  audio.load();
+
+  audioBar.style.display =
+    pageData.audio ? "flex" : "none";
+
+  updateAudioTime();
+}
+
+function loadImageForPage(pageData) {
+  if (!pageData.image) {
     return;
   }
 
@@ -571,8 +584,17 @@ function initializeImage() {
     imageNaturalHeight =
       preload.naturalHeight;
 
-    image.src = imageURL;
-    image.alt = imageTitle;
+    image.src =
+      pageData.image;
+
+    image.alt =
+      pageData.title;
+
+    title.textContent =
+      pageData.title;
+
+    document.title =
+      pageData.title || "画像Viewer";
 
     requestAnimationFrame(
       resetView
@@ -584,8 +606,61 @@ function initializeImage() {
       "画像を読み込めませんでした";
   };
 
-  preload.src = imageURL;
+  preload.src =
+    pageData.image;
 }
+
+function loadPage(index) {
+  if (
+    index < 0 ||
+    index >= pages.length
+  ) {
+    return;
+  }
+
+  currentPageIndex = index;
+
+  const pageData =
+    pages[currentPageIndex];
+
+  currentPage =
+    currentPageIndex + 1;
+
+  pageIndicator.textContent =
+    `${currentPage} / ${pages.length}`;
+
+  prevPageButton.disabled =
+    currentPageIndex === 0;
+
+  nextPageButton.disabled =
+    currentPageIndex === pages.length - 1;
+
+  loadImageForPage(
+    pageData
+  );
+
+  loadAudioForPage(
+    pageData
+  );
+}
+
+prevPageButton.addEventListener(
+  "click",
+  () => {
+    loadPage(
+      currentPageIndex - 1
+    );
+  }
+);
+
+nextPageButton.addEventListener(
+  "click",
+  () => {
+    loadPage(
+      currentPageIndex + 1
+    );
+  }
+);
 
 zoomInButton.addEventListener(
   "click",
@@ -697,6 +772,8 @@ document.title =
   currentPageData.title || "画像Viewer";
 
 
-initializeAudio();
-initializeImage();
+initializeAudioControls();
 
+loadPage(
+  currentPageIndex
+);
