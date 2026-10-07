@@ -203,6 +203,7 @@ body {
     column-gap: 5px;
     row-gap: 4px;
     padding: 6px 8px;
+    touch-action: manipulation;
   }
 
   #audioBar button {
@@ -275,6 +276,7 @@ body {
     min-width: 76px;
     height: 30px;
     font-size: 13px;
+    touch-action: manipulation;
   }
 
   #pageIndicator {
