@@ -276,9 +276,13 @@ function midpoint(a, b) {
 
 
 function handlePointerDown(event) {
-  // 画像コントロール上の操作は、
-  // 画像のドラッグ／ピンチ処理から除外する。
-  if (event.target.closest("#imageControls")) {
+  // 各種コントロール上の操作は、
+  // 画像のドラッグ／ピンチ／ダブルタップ処理から除外する。
+  if (
+    event.target.closest("#imageControls") ||
+    event.target.closest("#pageNavigation") ||
+    event.target.closest("#audioBar")
+  ) {
     return;
   }
 
