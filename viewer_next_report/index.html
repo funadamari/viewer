@@ -11,6 +11,7 @@
   <div id="imageStage">
     <img id="image" alt="">
     <div id="title"></div>
+
     <div id="imageControls" aria-label="画像操作">
       <button id="zoomIn" type="button" aria-label="拡大" title="拡大">＋</button>
       <button id="zoomOut" type="button" aria-label="縮小" title="縮小">−</button>
@@ -19,6 +20,18 @@
     </div>
   </div>
 
+  <div id="pageNavigation" aria-label="ページ移動">
+    <button id="prevPage" type="button" aria-label="前のページ">
+      ← 前へ
+    </button>
+
+    <span id="pageIndicator">1 / 6</span>
+
+    <button id="nextPage" type="button" aria-label="次のページ">
+      次へ →
+    </button>
+  </div>
+  
   <div id="audioBar" aria-label="音声コントロール">
     <audio id="audio" preload="metadata"></audio>
     <button id="back5" type="button" aria-label="5秒戻る" title="5秒戻る">↶</button>
