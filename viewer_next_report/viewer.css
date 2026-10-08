@@ -61,6 +61,26 @@ body {
   z-index: 5;
 }
 
+/* 目次 */
+#tableOfContents {
+  position: absolute;
+  top: 50px;
+  right: 8px;
+  width: min(360px, calc(100% - 16px));
+  max-height: calc(100% - 60px);
+
+  display: none;
+
+  overflow-y: auto;
+  padding: 10px;
+
+  background: rgba(20, 20, 20, 0.96);
+  border: 1px solid #555;
+  border-radius: 6px;
+
+  z-index: 30;
+}
+
 /* 画像操作と終了ボタンは常に右上 */
 #imageControls {
   position: absolute;
