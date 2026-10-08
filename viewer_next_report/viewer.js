@@ -541,14 +541,14 @@ function initializeAudioControls() {
     }
   );
 
-  volume.addEventListener(
-    "input",
-    () => {
-      audio.volume =
-        Number(volume.value);
-    }
-  );
+  volume.addEventListener("input", () => {
+    audio.volume = Number(volume.value);
+  });
 
+  volume.addEventListener("change", () => {
+    audio.volume = Number(volume.value);
+  });
+  
   rate.addEventListener(
     "change",
     () => {
