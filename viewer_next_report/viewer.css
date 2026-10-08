@@ -257,8 +257,9 @@ body {
     grid-row: 2;
     min-width: 45px;
     width: 100%;
+    touch-action: pan-x;
   }
-
+  
   #rate {
     grid-column: 6;
     grid-row: 2;
