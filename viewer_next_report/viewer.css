@@ -316,7 +316,7 @@ body {
   background: #444;
 }
 
-#pageNavigation button:disabled {
+#pageNavigation button[aria-disabled="true"] {
   opacity: 0.35;
   cursor: default;
 }
