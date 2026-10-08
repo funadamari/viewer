@@ -635,11 +635,21 @@ function loadPage(index) {
     `${currentPage} / ${pages.length}`;
 
   prevPageButton.disabled =
-    currentPageIndex === 0;
+    false;
 
   nextPageButton.disabled =
-    currentPageIndex === pages.length - 1;
+    false;
 
+  prevPageButton.setAttribute(
+    "aria-disabled",
+    currentPageIndex === 0
+  );
+
+  nextPageButton.setAttribute(
+    "aria-disabled",
+    currentPageIndex === pages.length - 1
+  );
+  
   loadImageForPage(
     pageData
   );
@@ -652,6 +662,17 @@ function loadPage(index) {
 let lastPageNavigationTime = 0;
 
 function navigatePage(direction) {
+  const targetIndex =
+    currentPageIndex + direction;
+
+  // ページ範囲外への移動は無視する
+  if (
+    targetIndex < 0 ||
+    targetIndex >= pages.length
+  ) {
+    return;
+  }
+
   const now = performance.now();
 
   // 短時間の連続タップは1回だけ処理する
@@ -661,9 +682,7 @@ function navigatePage(direction) {
 
   lastPageNavigationTime = now;
 
-  loadPage(
-    currentPageIndex + direction
-  );
+  loadPage(targetIndex);
 }
 
 prevPageButton.addEventListener(
