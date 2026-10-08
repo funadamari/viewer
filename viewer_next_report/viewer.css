@@ -66,12 +66,15 @@ body {
   position: absolute;
   top: 50px;
   right: 8px;
-  width: min(360px, calc(100% - 16px));
+  width: min(30vw, 360px);
+  min-width: 220px;
+  max-width: calc(100% - 16px);
   max-height: calc(100% - 60px);
 
   display: none;
 
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 10px;
 
   background: rgba(20, 20, 20, 0.96);
@@ -79,6 +82,45 @@ body {
   border-radius: 6px;
 
   z-index: 30;
+}
+#tableOfContents .tocItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 8px 0;
+  padding: 5px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background: #2c2c2c;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+#tableOfContents .tocItem img {
+  display: block;
+  width: 25%;
+  max-width: 120px;
+  height: auto;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+#tableOfContents .tocItem span {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+#tableOfContents .tocItem:hover {
+  background: #444;
+}
+
+#tableOfContents .tocItem.current {
+  border-color: #aaa;
+  background: #444;
 }
 
 /* 画像操作と終了ボタンは常に右上 */
