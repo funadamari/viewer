@@ -308,11 +308,12 @@ function handlePointerDown(event) {
   if (
     event.target.closest("#imageControls") ||
     event.target.closest("#pageNavigation") ||
-    event.target.closest("#audioBar")
+    event.target.closest("#audioBar") ||
+    event.target.closest("#tableOfContents")
   ) {
     return;
   }
-
+  
   pointers.set(event.pointerId, event);
 
   try {
