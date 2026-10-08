@@ -3,37 +3,37 @@ const params = new URLSearchParams(window.location.search);
 const pages = [
   {
     page: 1,
-    title: "1ページ目",
+    title: "魚類斃死状況調査レポート",
     image: "https://funadamari.github.io/env/images/perished_fish_sl-1.jpg",
     audio: "https://funadamari.github.io/env/audio/perished_fish_sl-1.mp3"
   },
   {
     page: 2,
-    title: "2ページ目",
+    title: "データが示す事実",
     image: "https://funadamari.github.io/env/images/perished_fish_sl-2.jpg",
     audio: "https://funadamari.github.io/env/audio/perished_fish_sl-2.mp3"
   },
   {
     page: 3,
-    title: "3ページ目",
+    title: "現場の特異性",
     image: "https://funadamari.github.io/env/images/perished_fish_sl-3.jpg",
     audio: "https://funadamari.github.io/env/audio/perished_fish_sl-3.mp3"
   },
   {
     page: 4,
-    title: "4ページ目",
+    title: "仮説の構築",
     image: "https://funadamari.github.io/env/images/perished_fish_sl-4.jpg",
     audio: "https://funadamari.github.io/env/audio/perished_fish_sl-4.mp3"
   },
   {
     page: 5,
-    title: "5ページ目",
+    title: "新たな着眼点",
     image: "https://funadamari.github.io/env/images/perished_fish_sl-5.jpg",
     audio: "https://funadamari.github.io/env/audio/perished_fish_sl-5.mp3"
   },
   {
     page: 6,
-    title: "6ページ目",
+    title: "今後のアクション",
     image: "https://funadamari.github.io/env/images/perished_fish_sl-6.jpg",
     audio: "https://funadamari.github.io/env/audio/perished_fish_sl-6.mp3"
   }
