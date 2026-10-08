@@ -77,6 +77,29 @@ const timeDisplay = document.getElementById("time");
 const volume = document.getElementById("volume");
 const rate = document.getElementById("rate");
 
+let audioContext = null;
+let gainNode = null;
+let audioSource = null;
+
+function initializeAudioVolume() {
+  try {
+    audioContext = new (
+      window.AudioContext ||
+      window.webkitAudioContext
+    )();
+
+    audioSource = audioContext.createMediaElementSource(audio);
+    gainNode = audioContext.createGain();
+
+    audioSource.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    gainNode.gain.value = Number(volume.value);
+  } catch (error) {
+    console.error("Web Audio initialization failed:", error);
+  }
+}
+
 const INITIAL_SCALE = 0.90;
 const MIN_SCALE = 0.10;
 const MAX_SCALE = 5.00;
@@ -476,12 +499,9 @@ function seekBy(seconds) {
 
 function initializeAudioControls() {
 
-  audio.volume =
-    Number(volume.value);
-
-  audio.playbackRate =
-    Number(rate.value);
-
+  initializeAudioVolume();
+  audio.volume = 1;
+  audio.playbackRate = Number(rate.value);
   audio.addEventListener(
     "loadedmetadata",
     updateAudioTime
@@ -497,13 +517,14 @@ function initializeAudioControls() {
     updateAudioTime
   );
 
-  playButton.addEventListener(
-    "click",
-    () => {
-      audio.play().catch(() => {});
+  playButton.addEventListener("click", () => {
+    if (audioContext && audioContext.state === "suspended") {
+      audioContext.resume();
     }
-  );
 
+    audio.play().catch(() => {});
+  });
+  
   pauseButton.addEventListener(
     "click",
     () => {
@@ -542,11 +563,15 @@ function initializeAudioControls() {
   );
 
   volume.addEventListener("input", () => {
-    audio.volume = Number(volume.value);
+    if (gainNode) {
+      gainNode.gain.value = Number(volume.value);
+    }
   });
 
   volume.addEventListener("change", () => {
-    audio.volume = Number(volume.value);
+    if (gainNode) {
+      gainNode.gain.value = Number(volume.value);
+    }
   });
   
   rate.addEventListener(
