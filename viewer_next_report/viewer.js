@@ -63,6 +63,9 @@ const prevPageButton = document.getElementById("prevPage");
 const nextPageButton = document.getElementById("nextPage");
 const pageIndicator = document.getElementById("pageIndicator");
 
+const pageNavigation =
+  document.getElementById("pageNavigation");
+
 const audioBar = document.getElementById("audioBar");
 const audio = document.getElementById("audio");
 const back5Button = document.getElementById("back5");
@@ -677,8 +680,9 @@ nextPageButton.addEventListener(
   }
 );
 
-// ダブルタップによるブラウザの拡大を防止
-prevPageButton.addEventListener(
+// ページナビゲーション全体で
+// ダブルクリック／ダブルタップによるブラウザ拡大を防止
+pageNavigation.addEventListener(
   "dblclick",
   (event) => {
     event.preventDefault();
