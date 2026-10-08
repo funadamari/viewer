@@ -58,6 +58,7 @@ const zoomInButton = document.getElementById("zoomIn");
 const zoomOutButton = document.getElementById("zoomOut");
 const resetViewButton = document.getElementById("resetView");
 const closeButton = document.getElementById("closeButton");
+const tocButton = document.getElementById("tocButton");
 
 const prevPageButton = document.getElementById("prevPage");
 const nextPageButton = document.getElementById("nextPage");
@@ -640,6 +641,54 @@ function loadImageForPage(pageData) {
     pageData.image;
 }
 
+function updateTableOfContents() {
+  const tableOfContents =
+    document.getElementById("tableOfContents");
+
+  if (!tableOfContents) {
+    return;
+  }
+
+  tableOfContents.innerHTML = "";
+
+  pages.forEach((pageData, index) => {
+    const item =
+      document.createElement("button");
+
+    item.type = "button";
+    item.className = "tocItem";
+
+    if (index === currentPageIndex) {
+      item.classList.add("current");
+    }
+
+    const thumbnail =
+      document.createElement("img");
+
+    thumbnail.src = pageData.image;
+    thumbnail.alt = pageData.title;
+
+    const itemTitle =
+      document.createElement("span");
+
+    itemTitle.textContent =
+      `${pageData.page}. ${pageData.title}`;
+
+    item.appendChild(thumbnail);
+    item.appendChild(itemTitle);
+
+    item.addEventListener(
+      "click",
+      () => {
+        loadPage(index);
+        tableOfContents.style.display = "none";
+      }
+    );
+
+    tableOfContents.appendChild(item);
+  });
+}
+
 function loadPage(index) {
   if (
     index < 0 ||
@@ -658,6 +707,8 @@ function loadPage(index) {
 
   pageIndicator.textContent =
     `${currentPage} / ${pages.length}`;
+
+  updateTableOfContents();
 
   prevPageButton.disabled =
     false;
@@ -754,6 +805,22 @@ resetViewButton.addEventListener(
   resetView
 );
 
+tocButton.addEventListener(
+  "click",
+  () => {
+    const tableOfContents =
+      document.getElementById("tableOfContents");
+
+    if (
+      tableOfContents.style.display === "block"
+    ) {
+      tableOfContents.style.display = "none";
+    } else {
+      updateTableOfContents();
+      tableOfContents.style.display = "block";
+    }
+  }
+);
 
 closeButton.addEventListener(
   "click",
