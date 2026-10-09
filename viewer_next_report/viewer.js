@@ -19,6 +19,9 @@ const zoomOutButton = document.getElementById("zoomOut");
 const resetViewButton = document.getElementById("resetView");
 const closeButton = document.getElementById("closeButton");
 const tocButton = document.getElementById("tocButton");
+const helpButton = document.getElementById("helpButton");
+const helpOverlay = document.getElementById("helpOverlay");
+const helpClose = document.getElementById("helpClose");
 
 const prevPageButton = document.getElementById("prevPage");
 const nextPageButton = document.getElementById("nextPage");
@@ -278,11 +281,12 @@ function handlePointerDown(event) {
     event.target.closest("#imageControls") ||
     event.target.closest("#pageNavigation") ||
     event.target.closest("#audioBar") ||
-    event.target.closest("#tableOfContents")
+    event.target.closest("#tableOfContents") ||
+    event.target.closest("#helpOverlay")
   ) {
     return;
   }
-
+  
   if (pointers.size === 0) {
     swipeStartX = event.clientX;
     swipeStartY = event.clientY;
@@ -930,6 +934,37 @@ tocButton.addEventListener(
     }
   }
 );
+
+// 操作ガイドを開く
+helpButton.addEventListener("click", () => {
+  helpOverlay.style.display = "flex";
+  helpClose.focus();
+});
+
+// 閉じるボタンでガイドを閉じる
+helpClose.addEventListener("click", () => {
+  helpOverlay.style.display = "none";
+  helpButton.focus();
+});
+
+// ガイドの背景部分をクリックして閉じる
+helpOverlay.addEventListener("click", (event) => {
+  if (event.target === helpOverlay) {
+    helpOverlay.style.display = "none";
+    helpButton.focus();
+  }
+});
+
+// Escapeキーでも閉じる
+document.addEventListener("keydown", (event) => {
+  if (
+    event.key === "Escape" &&
+    helpOverlay.style.display === "flex"
+  ) {
+    helpOverlay.style.display = "none";
+    helpButton.focus();
+  }
+});
 
 closeButton.addEventListener(
   "click",
