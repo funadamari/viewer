@@ -23,6 +23,8 @@ const helpButton = document.getElementById("helpButton");
 const helpOverlay = document.getElementById("helpOverlay");
 const helpClose = document.getElementById("helpClose");
 
+helpOverlay.style.display = "none";
+
 const prevPageButton = document.getElementById("prevPage");
 const nextPageButton = document.getElementById("nextPage");
 const pageIndicator = document.getElementById("pageIndicator");
