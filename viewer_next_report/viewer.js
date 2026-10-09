@@ -1,54 +1,14 @@
 const params = new URLSearchParams(window.location.search);
 
-const pages = [
-  {
-    page: 1,
-    title: "魚類斃死状況調査レポート",
-    image: "https://funadamari.github.io/env/images/perished_fish_sl-1.jpg",
-    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-1.mp3"
-  },
-  {
-    page: 2,
-    title: "データが示す事実",
-    image: "https://funadamari.github.io/env/images/perished_fish_sl-2.jpg",
-    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-2.mp3"
-  },
-  {
-    page: 3,
-    title: "現場の特異性",
-    image: "https://funadamari.github.io/env/images/perished_fish_sl-3.jpg",
-    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-3.mp3"
-  },
-  {
-    page: 4,
-    title: "仮説の構築",
-    image: "https://funadamari.github.io/env/images/perished_fish_sl-4.jpg",
-    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-4.mp3"
-  },
-  {
-    page: 5,
-    title: "新たな着眼点",
-    image: "https://funadamari.github.io/env/images/perished_fish_sl-5.jpg",
-    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-5.mp3"
-  },
-  {
-    page: 6,
-    title: "今後のアクション",
-    image: "https://funadamari.github.io/env/images/perished_fish_sl-6.jpg",
-    audio: "https://funadamari.github.io/env/audio/perished_fish_sl-6.mp3"
-  }
-];
+// 読み込む報告書のJSONファイル
+const reportDataUrl = params.get("data") ;
 
-let currentPage =
-  Math.min(
-    pages.length,
-    Math.max(
-      1,
-      Number(params.get("page")) || 1
-    )
-  );
+// 報告書データはJSONから読み込む
+let pages = [];
+let reportTitle = "";
 
-let currentPageIndex = currentPage - 1;
+let currentPage = 1;
+let currentPageIndex = 0;
 
 const image = document.getElementById("image");
 const title = document.getElementById("title");
@@ -626,8 +586,7 @@ function loadImageForPage(pageData) {
       pageData.title;
 
     document.title =
-      pageData.title || "画像Viewer";
-
+      reportTitle || pageData.title || "画像Viewer";    
     requestAnimationFrame(
       resetView
     );
@@ -734,6 +693,57 @@ function loadPage(index) {
   loadAudioForPage(
     pageData
   );
+}
+
+async function initializeReport() {
+  try {
+    if (!reportDataUrl) {
+      throw new Error(
+        "JSONファイルのURLが指定されていません。"
+      );
+    }
+    
+    const response = await fetch(reportDataUrl);
+
+    if (!response.ok) {
+      throw new Error(
+        `JSONの読み込みに失敗しました: ${response.status}`
+      );
+    }
+
+    const reportData = await response.json();
+
+    if (
+      !Array.isArray(reportData.pages) ||
+      reportData.pages.length === 0
+    ) {
+      throw new Error("ページデータがありません");
+    }
+
+    pages = reportData.pages;
+    reportTitle = reportData.title || "";
+
+    currentPage = Math.min(
+      pages.length,
+      Math.max(
+        1,
+        Number(params.get("page")) || 1
+      )
+    );
+
+    currentPageIndex = currentPage - 1;
+
+    loadPage(currentPageIndex);
+
+  } catch (error) {
+    console.error("報告書の読み込みエラー:", error);
+
+    title.textContent =
+      "報告書データを読み込めませんでした";
+
+    document.title = "報告書の読み込みエラー";
+    pageIndicator.textContent = "データ読込エラー";
+  }
 }
 
 let lastPageNavigationTime = 0;
@@ -912,6 +922,4 @@ window.addEventListener(
 
 initializeAudioControls();
 
-loadPage(
-  currentPageIndex
-);
+initializeReport();
