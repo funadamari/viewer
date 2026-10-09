@@ -426,4 +426,115 @@ body {
     align-self: center;
     min-width: 120px;
   }
+  
+/* 操作ガイドボタン */
+#imageControls #helpButton {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+/* 操作ガイドの背景 */
+#helpOverlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.78);
+  z-index: 40;
+  touch-action: auto;
+}
+
+/* 操作ガイド本体 */
+#helpPanel {
+  width: min(520px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 20px;
+  background: #f7f7f7;
+  color: #222;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  line-height: 1.6;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+#helpHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+#helpHeading {
+  margin: 0;
+  font-size: 20px;
+}
+
+#helpClose {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+#helpPanel section {
+  margin-top: 14px;
+}
+
+#helpPanel h3 {
+  margin: 0 0 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #ccc;
+  font-size: 15px;
+}
+
+#helpPanel ul {
+  margin: 5px 0;
+  padding-left: 1.4em;
+}
+
+#helpPanel li {
+  margin: 3px 0;
+}
+
+#helpPanel .helpNote {
+  margin: 8px 0 0;
+  color: #555;
+  font-size: 12px;
+}
+
+/* スマートフォン */
+@media (max-width: 768px) {
+  #helpOverlay {
+    padding: 10px;
+  }
+
+  #helpPanel {
+    padding: 12px 15px;
+    font-size: 13px;
+  }
+
+  #helpHeading {
+    font-size: 18px;
+  }
+
+  #helpPanel section {
+    margin-top: 10px;
+  }
+
+  #helpPanel h3 {
+    font-size: 14px;
+  }
+}
 }
