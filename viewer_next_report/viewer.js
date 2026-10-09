@@ -266,6 +266,10 @@ function midpoint(a, b) {
   };
 }
 
+let swipeStartX = 0;
+let swipeStartY = 0;
+let swipeStartScale = 1;
+let swipeEligible = false;
 
 function handlePointerDown(event) {
   // 各種コントロール上の操作は、
@@ -277,6 +281,16 @@ function handlePointerDown(event) {
     event.target.closest("#tableOfContents")
   ) {
     return;
+  }
+
+  if (pointers.size === 0) {
+    swipeStartX = event.clientX;
+    swipeStartY = event.clientY;
+    swipeStartScale = scale;
+    swipeEligible = true;
+  } else {
+    // 2本指操作ではページ移動しない
+    swipeEligible = false;
   }
   
   pointers.set(event.pointerId, event);
@@ -371,6 +385,29 @@ function handlePointerEnd(event) {
   if (pointers.size === 0) {
     dragging = false;
 
+    const swipeDeltaX =
+      event.clientX - swipeStartX;
+
+    const swipeDeltaY =
+      event.clientY - swipeStartY;
+
+    const isSwipe =
+      swipeEligible &&
+      swipeStartScale <= fitScale * 1.05 &&
+      Math.abs(swipeDeltaX) >= 60 &&
+      Math.abs(swipeDeltaX) >
+        Math.abs(swipeDeltaY) * 1.3;
+
+    swipeEligible = false;
+
+    if (isSwipe) {
+      // 左スワイプ：次のページ
+      // 右スワイプ：前のページ
+      navigatePage(swipeDeltaX < 0 ? 1 : -1);
+      lastTapTime = 0;
+      return;
+    }
+
     const moved =
       Math.hypot(
         event.clientX - dragStartX,
@@ -401,7 +438,6 @@ function handlePointerEnd(event) {
     }
   }
 }
-
 
 function formatTime(seconds) {
   if (
