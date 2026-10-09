@@ -38,6 +38,11 @@ const timeDisplay = document.getElementById("time");
 const volume = document.getElementById("volume");
 const rate = document.getElementById("rate");
 
+const autoPlayToggle =
+  document.getElementById("autoPlayToggle");
+
+let autoPlayEnabled = false;
+let audioLoadToken = 0;
 let audioContext = null;
 let gainNode = null;
 let audioSource = null;
@@ -459,70 +464,85 @@ function seekBy(seconds) {
 }
 
 
-function initializeAudioControls() {
+function setAutoPlay(enabled) {
+  autoPlayEnabled = enabled;
 
+  autoPlayToggle.textContent =
+    enabled ? "自動再生 ON" : "自動再生 OFF";
+
+  autoPlayToggle.setAttribute(
+    "aria-pressed",
+    String(enabled)
+  );
+
+  autoPlayToggle.title =
+    enabled ? "自動再生を停止" : "自動再生を開始";
+}
+
+async function playCurrentAudio() {
+  if (!autoPlayEnabled || !audio.src) {
+    return;
+  }
+
+  try {
+    if (audioContext && audioContext.state === "suspended") {
+      await audioContext.resume();
+    }
+
+    if (autoPlayEnabled) {
+      await audio.play();
+    }
+  } catch (error) {
+    console.warn("音声を再生できませんでした:", error);
+  }
+}
+
+
+function initializeAudioControls() {
   initializeAudioVolume();
+
   audio.volume = 1;
   audio.playbackRate = Number(rate.value);
-  audio.addEventListener(
-    "loadedmetadata",
-    updateAudioTime
-  );
 
-  audio.addEventListener(
-    "timeupdate",
-    updateAudioTime
-  );
+  audio.addEventListener("loadedmetadata", updateAudioTime);
+  audio.addEventListener("timeupdate", updateAudioTime);
+  audio.addEventListener("durationchange", updateAudioTime);
 
-  audio.addEventListener(
-    "durationchange",
-    updateAudioTime
-  );
-
-  playButton.addEventListener("click", () => {
-    if (audioContext && audioContext.state === "suspended") {
-      audioContext.resume();
-    }
-
-    audio.play().catch(() => {});
-  });
-  
-  pauseButton.addEventListener(
-    "click",
-    () => {
-      audio.pause();
-    }
-  );
-
-  back5Button.addEventListener(
-    "click",
-    () => {
-      seekBy(-5);
-    }
-  );
-
-  forward5Button.addEventListener(
-    "click",
-    () => {
-      seekBy(5);
-    }
-  );
-
-  progress.addEventListener(
-    "input",
-    () => {
-      if (
-        !Number.isFinite(audio.duration) ||
-        audio.duration <= 0
-      ) {
-        return;
+  playButton.addEventListener("click", async () => {
+    try {
+      if (audioContext && audioContext.state === "suspended") {
+        await audioContext.resume();
       }
 
-      audio.currentTime =
-        (Number(progress.value) / 1000) *
-        audio.duration;
+      await audio.play();
+    } catch (error) {
+      console.warn("音声を再生できませんでした:", error);
     }
-  );
+  });
+
+  pauseButton.addEventListener("click", () => {
+    audio.pause();
+  });
+
+  back5Button.addEventListener("click", () => {
+    seekBy(-5);
+  });
+
+  forward5Button.addEventListener("click", () => {
+    seekBy(5);
+  });
+
+  progress.addEventListener("input", () => {
+    if (
+      !Number.isFinite(audio.duration) ||
+      audio.duration <= 0
+    ) {
+      return;
+    }
+
+    audio.currentTime =
+      (Number(progress.value) / 1000) * audio.duration;
+  });
 
   volume.addEventListener("input", () => {
     if (gainNode) {
@@ -535,29 +555,71 @@ function initializeAudioControls() {
       gainNode.gain.value = Number(volume.value);
     }
   });
-  
-  rate.addEventListener(
-    "change",
-    () => {
-      audio.playbackRate =
-        Number(rate.value);
+
+  rate.addEventListener("change", () => {
+    audio.playbackRate = Number(rate.value);
+  });
+
+  autoPlayToggle.addEventListener("click", async () => {
+    const enabled = !autoPlayEnabled;
+    setAutoPlay(enabled);
+
+    if (enabled) {
+      await playCurrentAudio();
+    } else {
+      audio.pause();
     }
-  );
+  });
+
+  audio.addEventListener("ended", () => {
+    if (!autoPlayEnabled) {
+      return;
+    }
+
+    if (currentPageIndex < pages.length - 1) {
+      loadPage(currentPageIndex + 1);
+    } else {
+      // 最終ページの音声が終わったら自動再生を停止
+      setAutoPlay(false);
+    }
+  });
+
+  setAutoPlay(false);
 }
 
+
 function loadAudioForPage(pageData) {
+  const token = ++audioLoadToken;
+
   audio.pause();
-
-  audio.currentTime = 0;
-
-  progress.value = "0";
-
-  audio.src = pageData.audio;
-
+  audio.removeAttribute("src");
   audio.load();
 
+  audio.currentTime = 0;
+  progress.value = "0";
+
   audioBar.style.display =
-    pageData.audio ? "flex" : "none";
+    pageData.audio ? "" : "none";
+
+  if (!pageData.audio) {
+    updateAudioTime();
+    return;
+  }
+
+  const onCanPlay = () => {
+    if (token !== audioLoadToken) {
+      return;
+    }
+
+    if (autoPlayEnabled) {
+      playCurrentAudio();
+    }
+  };
+
+  audio.addEventListener("canplay", onCanPlay, { once: true });
+
+  audio.src = pageData.audio;
+  audio.load();
 
   updateAudioTime();
 }
