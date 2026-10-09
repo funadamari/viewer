@@ -390,3 +390,40 @@ body {
   color: white;
   font-size: 14px;
 }
+
+
+/* 自動再生スイッチ */
+#autoPlayToggle {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 100px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #777;
+  border-radius: 5px;
+  background: #333;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#autoPlayToggle[aria-pressed="true"] {
+  background: #276749;
+  border-color: #48a878;
+}
+
+/* スマートフォンでは自動再生ボタンを3段目に配置 */
+@media (max-width: 768px) {
+  #audioBar {
+    min-height: 132px;
+    grid-template-rows: 38px 38px 34px;
+  }
+
+  #autoPlayToggle {
+    grid-column: 1 / 7;
+    grid-row: 3;
+    justify-self: center;
+    align-self: center;
+    min-width: 120px;
+  }
+}
