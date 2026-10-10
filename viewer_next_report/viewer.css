@@ -155,7 +155,7 @@ body {
 
 #imageControls #closeButton {
   font-size: 22px;
-  margin-left: 3px;
+  margin-left: auto;
 }
 
 /* 音声コントロールは画面最下段 */
