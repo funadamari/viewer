@@ -153,18 +153,19 @@ body {
   background: rgba(80, 80, 80, 0.9);
 }
 
+```css
 #imageControls #closeButton {
   font-size: 22px;
   margin-left: 0;
-  order: 1;
+  order: 3;
 }
 
 #imageControls #tocButton {
-  order: 2;
+  order: 1;
 }
 
 #imageControls #helpButton {
-  order: 3;
+  order: 2;
 }
 
 /* 音声コントロールは画面最下段 */
