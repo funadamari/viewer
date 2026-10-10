@@ -155,7 +155,16 @@ body {
 
 #imageControls #closeButton {
   font-size: 22px;
-  margin-left: auto;
+  margin-left: 0;
+  order: 1;
+}
+
+#imageControls #tocButton {
+  order: 2;
+}
+
+#imageControls #helpButton {
+  order: 3;
 }
 
 /* 音声コントロールは画面最下段 */
