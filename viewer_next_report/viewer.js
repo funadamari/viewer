@@ -937,6 +937,16 @@ tocButton.addEventListener(
   }
 );
 
+// 目次表示中に画像をクリックすると目次を閉じる
+image.addEventListener("click", () => {
+  const tableOfContents =
+    document.getElementById("tableOfContents");
+
+  if (tableOfContents.style.display === "block") {
+    tableOfContents.style.display = "none";
+  }
+});
+
 // 操作ガイドを開く
 helpButton.addEventListener("click", () => {
   helpOverlay.style.display = "flex";
