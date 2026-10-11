@@ -937,14 +937,25 @@ tocButton.addEventListener(
   }
 );
 
-// 目次表示中に画像をクリックすると目次を閉じる
-image.addEventListener("click", () => {
+imageStage.addEventListener("click", (event) => {
   const tableOfContents =
     document.getElementById("tableOfContents");
 
-  if (tableOfContents.style.display === "block") {
-    tableOfContents.style.display = "none";
+  if (tableOfContents.style.display !== "block") {
+    return;
   }
+
+  // 目次パネル内のクリックは対象外
+  if (tableOfContents.contains(event.target)) {
+    return;
+  }
+
+  // 操作ボタンのクリックも対象外
+  if (event.target.closest("#imageControls")) {
+    return;
+  }
+
+  tableOfContents.style.display = "none";
 });
 
 // 操作ガイドを開く
