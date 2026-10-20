@@ -805,7 +805,9 @@ let thumbnail;
     if (pageData.thumbnail) {
       // 動画ページにサムネイル画像が指定されている場合
       thumbnail = document.createElement("img");
-      thumbnail.src = pageData.thumbnail;
+      thumbnail.setAttribute("src", pageData.thumbnail);
+      thumbnail.dataset.thumbnailUrl = pageData.thumbnail;
+      console.log("動画サムネイルURL:", pageData.thumbnail);
       thumbnail.alt = (pageData.title || "") + "（動画）";
       thumbnail.className = "tocThumbnail";
     } else {
