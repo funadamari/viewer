@@ -13,6 +13,7 @@ let currentPageIndex = 0;
 const image = document.getElementById("image");
 const title = document.getElementById("title");
 const imageStage = document.getElementById("imageStage");
+const video = document.getElementById("video");
 
 const zoomInButton = document.getElementById("zoomIn");
 const zoomOutButton = document.getElementById("zoomOut");
@@ -280,6 +281,7 @@ function handlePointerDown(event) {
   // 各種コントロール上の操作は、
   // 画像のドラッグ／ピンチ／ダブルタップ処理から除外する。
   if (
+    event.target.closest("#video") ||
     event.target.closest("#imageControls") ||
     event.target.closest("#pageNavigation") ||
     event.target.closest("#audioBar") ||
@@ -287,7 +289,7 @@ function handlePointerDown(event) {
     event.target.closest("#helpOverlay")
   ) {
     return;
-  }
+  }  
   
   if (pointers.size === 0) {
     swipeStartX = event.clientX;
@@ -607,12 +609,24 @@ function initializeAudioControls() {
     setAutoPlay(enabled);
 
     if (enabled) {
-      await playCurrentAudio();
+      const pageData = pages[currentPageIndex];
+
+      if (pageData &&
+          (pageData.type === "video" || pageData.video)) {
+        try {
+          await video.play();
+        } catch (error) {
+          console.warn("動画を再生できませんでした:", error);
+        }
+      } else {
+        await playCurrentAudio();
+      }
     } else {
       audio.pause();
+      video.pause();
     }
   });
-
+  
   audio.addEventListener("ended", () => {
     if (!autoPlayEnabled) {
       return;
@@ -622,6 +636,18 @@ function initializeAudioControls() {
       loadPage(currentPageIndex + 1);
     } else {
       // 最終ページの音声が終わったら自動再生を停止
+      setAutoPlay(false);
+    }
+  });
+
+  video.addEventListener("ended", () => {
+    if (!autoPlayEnabled) {
+      return;
+    }
+
+    if (currentPageIndex < pages.length - 1) {
+      loadPage(currentPageIndex + 1);
+    } else {
       setAutoPlay(false);
     }
   });
@@ -640,9 +666,11 @@ function loadAudioForPage(pageData) {
   audio.currentTime = 0;
   progress.value = "0";
 
-  audioBar.style.display =
-    pageData.audio ? "" : "none";
+const isVideoPage =
+  pageData.type === "video" || Boolean(pageData.video);
 
+audioBar.style.display =
+  pageData.audio || isVideoPage ? "" : "none";
   if (!pageData.audio) {
     updateAudioTime();
     return;
@@ -667,44 +695,74 @@ function loadAudioForPage(pageData) {
 }
 
 function loadImageForPage(pageData) {
+  const viewer = document.getElementById("viewer");
+
+  // 以前の動画を停止し、動画モードを解除する
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+  video.style.display = "none";
+
+  viewer.classList.remove("video-mode");
+  image.style.display = "";
+
+  // タイトルは画像・動画のどちらでも更新する
+  title.textContent = pageData.title || "";
+  document.title =
+    reportTitle || pageData.title || "画像Viewer";
+
+  // 動画ページ
+  if (pageData.type === "video" || pageData.video) {
+    viewer.classList.add("video-mode");
+
+    image.style.display = "none";
+    video.style.display = "block";
+
+    // 動画ページには画像の拡大率を引き継がない
+    pointers.clear();
+    dragging = false;
+    swipeEligible = false;
+    scale = INITIAL_SCALE;
+    translateX = 0;
+    translateY = 0;
+
+    video.src = pageData.video;
+    video.load();
+
+    return;
+  }
+
+  // 画像ページ
   if (!pageData.image) {
+    image.style.display = "none";
     return;
   }
 
   const preload = new Image();
 
   preload.onload = () => {
-    imageNaturalWidth =
-      preload.naturalWidth;
+    // 読み込み中に別ページへ移動していたら処理しない
+    if (pages[currentPageIndex] !== pageData) {
+      return;
+    }
 
-    imageNaturalHeight =
-      preload.naturalHeight;
+    imageNaturalWidth = preload.naturalWidth;
+    imageNaturalHeight = preload.naturalHeight;
 
-    image.src =
-      pageData.image;
+    image.src = pageData.image;
+    image.alt = pageData.title || "";
 
-    image.alt =
-      pageData.title;
-
-    title.textContent =
-      pageData.title;
-
-    document.title =
-      reportTitle || pageData.title || "画像Viewer";    
-    requestAnimationFrame(
-      resetView
-    );
+    requestAnimationFrame(resetView);
   };
 
   preload.onerror = () => {
-    image.alt =
-      "画像を読み込めませんでした";
+    if (pages[currentPageIndex] === pageData) {
+      image.alt = "画像を読み込めませんでした";
+    }
   };
 
-  preload.src =
-    pageData.image;
+  preload.src = pageData.image;
 }
-
 function updateTableOfContents() {
   const tableOfContents =
     document.getElementById("tableOfContents");
@@ -726,12 +784,19 @@ function updateTableOfContents() {
       item.classList.add("current");
     }
 
-    const thumbnail =
-      document.createElement("img");
+    let thumbnail;
 
-    thumbnail.src = pageData.image;
-    thumbnail.alt = pageData.title;
-
+    if (pageData.type === "video" || pageData.video) {
+      // 動画ページは画像サムネイルの代わりに動画マークを表示
+      thumbnail = document.createElement("span");
+      thumbnail.textContent = "▶";
+      thumbnail.setAttribute("aria-label", "動画");
+      thumbnail.className = "tocVideoIcon";
+    } else {
+      thumbnail = document.createElement("img");
+      thumbnail.src = pageData.image || "";
+      thumbnail.alt = pageData.title || "";
+    }
     const itemTitle =
       document.createElement("span");
 
@@ -1025,6 +1090,13 @@ imageStage.addEventListener(
 imageStage.addEventListener(
   "wheel",
   (event) => {
+    // 動画ページでは、画像のズーム処理を行わない
+    if (
+      document.getElementById("viewer").classList.contains("video-mode")
+    ) {
+      return;
+    }
+
     event.preventDefault();
 
     const rect =
@@ -1049,7 +1121,6 @@ imageStage.addEventListener(
   },
   { passive: false }
 );
-
 
 window.addEventListener(
   "resize",
