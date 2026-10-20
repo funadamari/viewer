@@ -808,7 +808,8 @@ function updateTableOfContents() {
       thumbnail.className = "tocVideoIcon";
     } else {
       thumbnail = document.createElement("img");
-      thumbnail.src = pageData.image || "";
+      thumbnail.src =
+        pageData.thumbnail || pageData.image || "";
       thumbnail.alt = pageData.title || "";
     }
     const itemTitle =
