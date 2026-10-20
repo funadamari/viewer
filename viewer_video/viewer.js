@@ -778,6 +778,7 @@ function loadImageForPage(pageData) {
   preload.src = pageData.image;
 }
 function updateTableOfContents() {
+  console.log("updateTableOfContents が実行されました");
   const tableOfContents =
     document.getElementById("tableOfContents");
 
