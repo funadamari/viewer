@@ -865,7 +865,7 @@ function loadPage(index) {
 
     // 自動再生がONで、現在のページが動画なら再生を開始する
   if (
-    autoPlay &&
+    autoPlayToggle.checked &&
     (pageData.type === "video" || pageData.video)
   ) {
     video.play().catch((error) => {
