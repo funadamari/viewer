@@ -549,3 +549,49 @@ body {
     font-size: 14px;
   }
 }
+/* 動画ページ */
+#video {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  z-index: 1;
+}
+
+/* 動画表示中は画像用の拡大縮小ボタンを隠す */
+#viewer.video-mode #zoomIn,
+#viewer.video-mode #zoomOut,
+#viewer.video-mode #resetView {
+  display: none;
+}
+
+/* 動画表示中は画像操作用のタッチ制御を解除 */
+#viewer.video-mode #imageStage {
+  touch-action: auto;
+}
+
+/* 動画表示中は音声専用コントロールを隠し、
+   自動再生ボタンだけを残す */
+#viewer.video-mode #audioBar > :not(#autoPlayToggle) {
+  display: none;
+}
+
+#viewer.video-mode #audioBar {
+  display: flex;
+  flex: 0 0 54px;
+  min-height: 54px;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  #viewer.video-mode #audioBar {
+    display: flex;
+    flex: 0 0 54px;
+    min-height: 54px;
+    padding: 6px 8px;
+  }
+}
