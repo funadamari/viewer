@@ -862,6 +862,16 @@ function loadPage(index) {
   loadAudioForPage(
     pageData
   );
+
+    // 自動再生がONで、現在のページが動画なら再生を開始する
+  if (
+    autoPlay &&
+    (pageData.type === "video" || pageData.video)
+  ) {
+    video.play().catch((error) => {
+      console.warn("動画の自動再生に失敗しました:", error);
+    });
+  }
 }
 
 async function initializeReport() {
