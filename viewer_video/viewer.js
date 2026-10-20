@@ -798,20 +798,30 @@ function updateTableOfContents() {
       item.classList.add("current");
     }
 
-    let thumbnail;
 
-    if (pageData.type === "video" || pageData.video) {
-      // 動画ページは画像サムネイルの代わりに動画マークを表示
+let thumbnail;
+
+  if (pageData.type === "video" || pageData.video) {
+    if (pageData.thumbnail) {
+      // 動画ページにサムネイル画像が指定されている場合
+      thumbnail = document.createElement("img");
+      thumbnail.src = pageData.thumbnail;
+      thumbnail.alt = (pageData.title || "") + "（動画）";
+      thumbnail.className = "tocThumbnail";
+    } else {
+      // サムネイル画像がない場合は動画マークを表示
       thumbnail = document.createElement("span");
       thumbnail.textContent = "▶";
       thumbnail.setAttribute("aria-label", "動画");
       thumbnail.className = "tocVideoIcon";
-    } else {
-      thumbnail = document.createElement("img");
-      thumbnail.src =
-        pageData.thumbnail || pageData.image || "";
-      thumbnail.alt = pageData.title || "";
     }
+  } else {
+    // 画像ページは従来どおり
+    thumbnail = document.createElement("img");
+    thumbnail.src = pageData.thumbnail || pageData.image || "";
+    thumbnail.alt = pageData.title || "";
+  }
+
     const itemTitle =
       document.createElement("span");
 
