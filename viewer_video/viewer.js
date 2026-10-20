@@ -729,7 +729,21 @@ function loadImageForPage(pageData) {
     video.src = pageData.video;
     video.load();
 
-    return;
+    // 動画の再生準備ができてから自動再生する
+    video.oncanplay = () => {
+      // 読み込み中に別ページへ移動していたら再生しない
+      if (pages[currentPageIndex] !== pageData) {
+        return;
+      }
+
+      if (autoPlayEnabled) {
+        video.play().catch((error) => {
+          console.warn("動画の自動再生に失敗しました:", error);
+        });
+      }
+    };
+
+    return; 
   }
 
   // 画像ページ
@@ -863,15 +877,6 @@ function loadPage(index) {
     pageData
   );
 
-    // 自動再生がONで、現在のページが動画なら再生を開始する
-  if (
-    autoPlayEnabled &&
-    (pageData.type === "video" || pageData.video)
-  ) {
-    video.play().catch((error) => {
-      console.warn("動画の自動再生に失敗しました:", error);
-    });
-  }
 }
 
 async function initializeReport() {
