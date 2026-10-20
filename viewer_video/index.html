@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no">
+  <title>画像Viewer</title>
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+<main id="viewer">
+  <div id="imageStage">
+    <img id="image" alt="">
+    <div id="title"></div>
+    <div id="tableOfContents" aria-label="目次"></div>
+  </div>
+
+      <div id="helpOverlay" aria-label="操作ガイド" role="dialog" aria-modal="true" aria-labelledby="helpHeading">
+      <div id="helpPanel">
+        <div id="helpHeader">
+          <h2 id="helpHeading">操作ガイド</h2>
+          <button id="helpClose" type="button" aria-label="ガイドを閉じる">×</button>
+        </div>
+
+        <section>
+          <h3>画像の操作</h3>
+          <ul>
+            <li>左右にスワイプ：前後のページへ移動</li>
+            <li>2本指で操作：拡大・縮小</li>
+            <li>拡大中にドラッグ：画像を移動</li>
+            <li>ダブルタップ：拡大・縮小</li>
+            <li>＋／−：拡大・縮小</li>
+            <li>↺：表示位置と倍率をリセット</li>
+            <li>☰：目次を表示し、ページを選択</li>
+          </ul>
+          <p class="helpNote">パソコンでは、マウスホイールでも拡大・縮小できます。</p>
+        </section>
+
+        <section>
+          <h3>ページ移動</h3>
+          <ul>
+            <li>「前へ」「次へ」：ページを切り替え</li>
+            <li>ページ番号：現在のページと総ページ数</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>音声の操作</h3>
+          <ul>
+            <li>▶：音声を再生</li>
+            <li>⏸：音声を一時停止</li>
+            <li>↶／↷：5秒戻る／5秒進む</li>
+            <li>再生位置バー：好きな位置へ移動</li>
+            <li>🔊とバー：音量を調整</li>
+            <li>再生速度：音声の速さを変更</li>
+            <li>自動再生 ON：音声終了後、次のページを自動再生</li>
+          </ul>
+        </section>
+
+        <p class="helpNote">×を押すとガイドを閉じて、閲覧に戻れます。</p>
+      </div>
+    </div>
+    
+    <div id="imageControls" aria-label="画像操作">
+      <button id="zoomIn" type="button" aria-label="拡大" title="拡大">＋</button>
+      <button id="zoomOut" type="button" aria-label="縮小" title="縮小">−</button>
+      <button id="resetView" type="button" aria-label="リセット" title="リセット">↺</button>
+      <button id="closeButton" type="button" aria-label="閉じる" title="閉じる">×</button>
+      <button id="tocButton" type="button" aria-label="目次" title="目次">☰</button>
+      <button id="helpButton" type="button" aria-label="操作ガイド" title="操作ガイド">？</button>
+    </div>
+
+  <div id="pageNavigation" aria-label="ページ移動">
+    <button id="prevPage" type="button" aria-label="前のページ">
+      ← 前へ
+    </button>
+
+    <span id="pageIndicator">1 / 6</span>
+
+    <button id="nextPage" type="button" aria-label="次のページ">
+      次へ →
+    </button>
+  </div>
+  
+  <div id="audioBar" aria-label="音声コントロール">
+    <audio id="audio" preload="metadata"></audio>
+    <button id="back5" type="button" aria-label="5秒戻る" title="5秒戻る">↶</button>
+    <button id="play" type="button" aria-label="再生" title="再生">▶</button>
+    <button id="pause" type="button" aria-label="一時停止" title="一時停止">⏸</button>
+    <button id="forward5" type="button" aria-label="5秒進む" title="5秒進む">↷</button>
+    <input id="progress" type="range" min="0" max="1000" value="0" aria-label="再生位置">
+    <span id="time">0:00 / 0:00</span>
+    <span class="volumeIcon" aria-hidden="true">🔊</span>
+    <input id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="音量">
+    <select id="rate" aria-label="再生速度" title="再生速度">
+      <option value="0.75">0.75×</option>
+      <option value="1" selected>1.0×</option>
+      <option value="1.25">1.25×</option>
+      <option value="1.5">1.5×</option>
+      <option value="2">2.0×</option>
+    </select>
+ 
+    <button
+      id="autoPlayToggle"
+      type="button"
+      aria-pressed="false"
+      title="自動再生を開始"
+    >自動再生 OFF</button>
+    
+  </div>
+</main>
+<script src="viewer.js"></script>
+</body>
+</html>
+
