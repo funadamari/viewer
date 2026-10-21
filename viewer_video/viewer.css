@@ -673,32 +673,36 @@ body {
   background: #111;
 }
 
-/* 動画の全画面表示ボタン */
-#videoFullscreenButton {
+/* 全画面表示ボタン：既存のアイコンと統一 */
+#imageControls #videoFullscreenButton {
   display: none;
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 20;
-
-  width: 44px;
-  height: 44px;
+  order: 0;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.65);
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 5px;
+  background: rgba(35, 35, 35, 0.82);
   color: #fff;
-  font-size: 30px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* タッチ操作主体の端末では、動画表示中にボタンを表示 */
+/* タッチ操作主体の端末では、動画表示中に表示 */
 @media (hover: none) and (pointer: coarse) {
-  #viewer.video-mode #videoFullscreenButton {
+  #viewer.video-mode #imageControls #videoFullscreenButton {
     display: flex;
     align-items: center;
     justify-content: center;
   }
+}
+
+/* 動画表示中は全画面表示・ガイド・閉じるを表示。
+   目次ボタンは必要に応じて表示する既存仕様を維持 */
+#imageControls #videoFullscreenButton:hover {
+  background: rgba(80, 80, 80, 0.9);
 }
