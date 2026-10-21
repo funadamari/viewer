@@ -15,6 +15,32 @@ const title = document.getElementById("title");
 const imageStage = document.getElementById("imageStage");
 const video = document.getElementById("video");
 
+// 動画の全画面表示ボタン
+const videoFullscreenButton =
+  document.getElementById("videoFullscreenButton");
+
+if (video && videoFullscreenButton) {
+  videoFullscreenButton.addEventListener("click", async () => {
+    try {
+      // iPhone向け：動画専用の全画面表示
+      if (typeof video.webkitEnterFullscreen === "function") {
+        video.webkitEnterFullscreen();
+        return;
+      }
+
+      // PCなど：標準の全画面表示
+      if (typeof video.requestFullscreen === "function") {
+        await video.requestFullscreen();
+        return;
+      }
+
+      console.warn("全画面表示に対応していません。");
+    } catch (error) {
+      console.warn("全画面表示に失敗しました:", error);
+    }
+  });
+}
+
 const zoomInButton = document.getElementById("zoomIn");
 const zoomOutButton = document.getElementById("zoomOut");
 const resetViewButton = document.getElementById("resetView");
