@@ -98,16 +98,82 @@ body {
   text-align: left;
 }
 
-#tableOfContents .tocItem img {
+
+/* 目次サムネイルの共通領域 */
+#tableOfContents .tocThumbnailContainer {
+  position: relative;
   display: block;
   width: 25%;
   max-width: 120px;
+  flex: 0 0 25%;
+  min-width: 0;
+  overflow: hidden;
+  background: #444;
+  line-height: 1;
+}
+
+/* サムネイル画像 */
+#tableOfContents .tocThumbnailContainer img {
+  display: block;
+  width: 100%;
   height: auto;
-  flex: 0 0 auto;
   object-fit: contain;
 }
 
-#tableOfContents .tocItem span {
+/* 動画サムネイルがない場合の表示領域 */
+#tableOfContents .tocThumbnailContainer.hasVideo {
+  aspect-ratio: 4 / 3;
+}
+
+/* 動画サムネイル画像がある場合も領域いっぱいに表示 */
+#tableOfContents .tocThumbnailContainer.hasVideo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 動画の再生マーク：中央 */
+#tableOfContents .tocVideoIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  padding-left: 3px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* 音声マーク：右下 */
+#tableOfContents .tocAudioIcon {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ページタイトルだけに適用する */
+#tableOfContents .tocItem > span {
   flex: 1 1 auto;
   min-width: 0;
   margin-left: 8px;
