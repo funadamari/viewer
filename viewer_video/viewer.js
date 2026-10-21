@@ -777,8 +777,10 @@ function loadImageForPage(pageData) {
 
   preload.src = pageData.image;
 }
+
 function updateTableOfContents() {
   console.log("updateTableOfContents が実行されました");
+
   const tableOfContents =
     document.getElementById("tableOfContents");
 
@@ -789,8 +791,7 @@ function updateTableOfContents() {
   tableOfContents.innerHTML = "";
 
   pages.forEach((pageData, index) => {
-    const item =
-      document.createElement("button");
+    const item = document.createElement("button");
 
     item.type = "button";
     item.className = "tocItem";
@@ -799,48 +800,86 @@ function updateTableOfContents() {
       item.classList.add("current");
     }
 
+    // 動画ページかどうかを判定
+    const isVideo =
+      pageData.type === "video" || !!pageData.video;
 
-let thumbnail;
+    // 音声付き画像かどうかを判定
+    const hasAudio =
+      !isVideo && !!pageData.audio;
 
-  if (pageData.type === "video" || pageData.video) {
-    if (pageData.thumbnail) {
-      // 動画ページにサムネイル画像が指定されている場合
-      thumbnail = document.createElement("img");
-      thumbnail.setAttribute("src", pageData.thumbnail);
-      thumbnail.dataset.thumbnailUrl = pageData.thumbnail;
-      console.log("動画サムネイルURL:", pageData.thumbnail);
-      thumbnail.alt = (pageData.title || "") + "（動画）";
-      thumbnail.className = "tocThumbnail";
+    // サムネイルを囲む要素
+    const thumbnailContainer =
+      document.createElement("div");
+
+    thumbnailContainer.className =
+      "tocThumbnailContainer";
+
+    let thumbnail;
+
+    if (isVideo) {
+      thumbnailContainer.classList.add("hasVideo");
+
+      if (pageData.thumbnail) {
+        // 動画サムネイル画像を表示
+        thumbnail = document.createElement("img");
+        thumbnail.src = pageData.thumbnail;
+        thumbnail.dataset.thumbnailUrl = pageData.thumbnail;
+        thumbnail.alt = (pageData.title || "") + "（動画）";
+
+        console.log(
+          "動画サムネイルURL:",
+          pageData.thumbnail
+        );
+
+        thumbnailContainer.appendChild(thumbnail);
+      }
+
+      // 動画マークを中央に重ねる
+      const videoIcon = document.createElement("span");
+      videoIcon.className = "tocVideoIcon";
+      videoIcon.textContent = "▶";
+      videoIcon.setAttribute("aria-label", "動画");
+      videoIcon.setAttribute("aria-hidden", "false");
+
+      thumbnailContainer.appendChild(videoIcon);
+
     } else {
-      // サムネイル画像がない場合は動画マークを表示
-      thumbnail = document.createElement("span");
-      thumbnail.textContent = "▶";
-      thumbnail.setAttribute("aria-label", "動画");
-      thumbnail.className = "tocVideoIcon";
-    }
-  } else {
-    // 画像ページは従来どおり
-    thumbnail = document.createElement("img");
-    thumbnail.src = pageData.thumbnail || pageData.image || "";
-    thumbnail.alt = pageData.title || "";
-  }
+      // 通常の画像、または音声付き画像
+      thumbnail = document.createElement("img");
+      thumbnail.src =
+        pageData.thumbnail || pageData.image || "";
+      thumbnail.alt = pageData.title || "";
 
-    const itemTitle =
-      document.createElement("span");
+      thumbnailContainer.appendChild(thumbnail);
+
+      if (hasAudio) {
+        thumbnailContainer.classList.add("hasAudio");
+
+        // スピーカーマークを右下に重ねる
+        const audioIcon = document.createElement("span");
+        audioIcon.className = "tocAudioIcon";
+        audioIcon.textContent = "🔊";
+        audioIcon.setAttribute("aria-label", "音声付き画像");
+
+        thumbnailContainer.appendChild(audioIcon);
+      }
+    }
+
+    // ページタイトル
+    const itemTitle = document.createElement("span");
 
     itemTitle.textContent =
       `${pageData.page}. ${pageData.title}`;
 
-    item.appendChild(thumbnail);
+    item.appendChild(thumbnailContainer);
     item.appendChild(itemTitle);
 
-    item.addEventListener(
-      "click",
-      () => {
-        loadPage(index);
-        tableOfContents.style.display = "none";
-      }
-    );
+    // 既存のページ切り替え処理を維持
+    item.addEventListener("click", () => {
+      loadPage(index);
+      tableOfContents.style.display = "none";
+    });
 
     tableOfContents.appendChild(item);
   });
