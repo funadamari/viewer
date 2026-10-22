@@ -19,11 +19,35 @@ const video = document.getElementById("video");
 const videoFullscreenButton =
   document.getElementById("videoFullscreenButton");
 
+// 全画面表示に入る前に再生中だったかを記録
+let resumeAfterIOSFullscreen = false;
+
 if (video && videoFullscreenButton) {
+
+  // iPhoneで全画面表示を終了したとき、動画を再開
+  video.addEventListener("webkitendfullscreen", () => {
+    if (!resumeAfterIOSFullscreen) {
+      return;
+    }
+
+    resumeAfterIOSFullscreen = false;
+
+    // 全画面表示の終了処理後に再生を再開
+    setTimeout(() => {
+      if (video.paused && !video.ended) {
+        video.play().catch((error) => {
+          console.warn("全画面解除後の再生再開に失敗しました:", error);
+        });
+      }
+    }, 150);
+  });
+
   videoFullscreenButton.addEventListener("click", async () => {
     try {
       // iPhone向け：動画専用の全画面表示
       if (typeof video.webkitEnterFullscreen === "function") {
+        resumeAfterIOSFullscreen = !video.paused && !video.ended;
+
         video.webkitEnterFullscreen();
         return;
       }
