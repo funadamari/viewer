@@ -160,6 +160,66 @@ function hideImageControlsForLandscape() {
 const imageControlsStyle = document.createElement("style");
 imageControlsStyle.textContent = `
   @media (orientation: landscape) and (pointer: coarse) {
+    /* 横向きの画像ページは画面全体を画像ステージに使う */
+    #viewer:not(.video-mode) {
+      position: relative !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      overflow: hidden !important;
+    }
+    #viewer:not(.video-mode) #imageStage {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      min-height: 0 !important;
+      flex: none !important;
+    }
+    /* コントロールは画像の上に重ね、表示しても画像領域を縮めない */
+    #viewer:not(.video-mode) #title,
+    #viewer:not(.video-mode) #audioBar,
+    #viewer:not(.video-mode) #pageNavigation,
+    #viewer:not(.video-mode) #imageControls {
+      position: absolute !important;
+      z-index: 20 !important;
+      box-sizing: border-box !important;
+      background: transparent !important;
+      background-color: transparent !important;
+      box-shadow: none !important;
+    }
+    #viewer:not(.video-mode) #title {
+      top: 4px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      max-width: 80vw !important;
+    }
+    #viewer:not(.video-mode) #audioBar {
+      top: 30px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      max-width: 96vw !important;
+    }
+    #viewer:not(.video-mode) #pageNavigation {
+      bottom: 48px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
+    #viewer:not(.video-mode) #imageControls {
+      bottom: 4px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      max-width: 98vw !important;
+    }
+    /* ボタン類も透明背景にし、背後の画像を見えるようにする */
+    #viewer:not(.video-mode) #audioBar button,
+    #viewer:not(.video-mode) #pageNavigation button,
+    #viewer:not(.video-mode) #imageControls button {
+      background: transparent !important;
+      background-color: transparent !important;
+      box-shadow: none !important;
+    }
     #viewer.image-controls-hidden #title,
     #viewer.image-controls-hidden #audioBar,
     #viewer.image-controls-hidden #pageNavigation,
@@ -167,21 +227,16 @@ imageControlsStyle.textContent = `
     #viewer.image-controls-hidden #videoFullscreenButton {
       display: none !important;
     }
-    #viewer.image-controls-hidden #imageStage {
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
-      height: 100% !important;
-      max-height: 100dvh !important;
-    }
   }
 `;
 document.head.appendChild(imageControlsStyle);
 
-landscapeTouchQuery.addEventListener("change", () => {
+function refreshImageLayoutForOrientation() {
   const viewer = document.getElementById("viewer");
   if (!viewer || viewer.classList.contains("video-mode")) {
     return;
   }
+
   if (shouldAutoHideImageControls()) {
     hideImageControlsForLandscape();
   } else {
@@ -191,7 +246,19 @@ landscapeTouchQuery.addEventListener("change", () => {
     }
     viewer.classList.remove("image-controls-hidden");
   }
-});
+
+  // CSSの向き変更が反映された後に表示領域を測り直し、画像を中央に合わせる。
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (imageNaturalWidth > 0 && imageNaturalHeight > 0) {
+        resetView();
+      }
+    });
+  });
+}
+
+landscapeTouchQuery.addEventListener("change", refreshImageLayoutForOrientation);
+window.addEventListener("orientationchange", refreshImageLayoutForOrientation);
 
 const audio = document.getElementById("audio");
 const back5Button = document.getElementById("back5");
