@@ -86,14 +86,29 @@ if (video && videoFullscreenButton) {
     resumeAfterIOSFullscreen = false;
 
     // 全画面表示の終了処理後に再生を再開
-    setTimeout(() => {
-      if (video.paused && !video.ended) {
-        video.play().catch((error) => {
-         debugLog("再生再開エラー:", error);
-         console.warn("全画面解除後の再生再開に失敗しました:", error);
-        });
-      }
-    }, 150);
+
+setTimeout(() => {
+  debugLog(
+    "再開処理開始: paused =", video.paused,
+    "ended =", video.ended
+  );
+
+  if (video.paused && !video.ended) {
+    debugLog("video.play() を実行します");
+
+    video.play()
+      .then(() => {
+        debugLog(
+          "play() 成功: paused =", video.paused
+        );
+      })
+      .catch((error) => {
+        debugLog("再生再開エラー:", error);
+      });
+  } else {
+    debugLog("再開条件を満たしていません");
+  }
+}, 150);
   });
 
   videoFullscreenButton.addEventListener("click", async () => {
