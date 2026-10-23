@@ -204,7 +204,24 @@ imageControlsStyle.textContent = `
     }
     /* 横向きでも、ページ操作と音声操作は縦向きと同様に画面下部へ集約する。
        画像コントロールは既存の右上位置を維持し、下部の操作部と分離する。 */
+
     /* 下部の操作部を3段に分離：ページ、音声、最後に自動再生ボタン */
+
+    /* ページコントロール：上段 */
+    #viewer:not(.video-mode) #pageNavigation {
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: calc(env(safe-area-inset-bottom) + 88px) !important;
+      top: auto !important;
+      height: 42px !important;
+      flex: 0 0 42px !important;
+      z-index: 10019 !important;
+      margin: 0 !important;
+      background: transparent !important;
+    }
+
+    /* 音声コントロール：中段。高さを抑えて1行に収める */
     #viewer:not(.video-mode) #audioBar {
       position: fixed !important;
       left: 0 !important;
@@ -212,18 +229,24 @@ imageControlsStyle.textContent = `
       bottom: calc(env(safe-area-inset-bottom) + 35px) !important;
       top: auto !important;
       z-index: 10020 !important;
-      margin: 0 auto !important;
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 5px !important;
+      width: 100% !important;
+      height: 46px !important;
+      min-height: 0 !important;
+      max-height: 46px !important;
+      padding: 4px 6px !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      background: transparent !important;
+      border: none !important;
+      box-sizing: border-box !important;
     }
-    #viewer:not(.video-mode) #pageNavigation {
-      position: fixed !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: calc(env(safe-area-inset-bottom) + 68px) !important;
-      top: auto !important;
-      z-index: 10019 !important;
-      margin: 0 auto !important;
-    }
-    /* 自動再生ボタンは音声コントロールの横ではなく、最下段中央に配置 */
+
+    /* 自動再生ボタン：最下段。位置は変えない */
     #viewer:not(.video-mode) #autoPlayToggle {
       position: fixed !important;
       left: 50% !important;
@@ -233,6 +256,7 @@ imageControlsStyle.textContent = `
       transform: translateX(-50%) !important;
       z-index: 10021 !important;
       margin: 0 !important;
+      height: 30px !important;
     }
     #viewer:not(.video-mode) #audioBar button,
     #viewer:not(.video-mode) #pageNavigation button,
