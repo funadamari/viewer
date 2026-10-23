@@ -199,6 +199,65 @@ imageControlsStyle.textContent = `
       background-color: transparent !important;
       box-shadow: none !important;
     }
+    /*
+     * 横向きでは音声操作をコンパクトな1行にまとめる。
+     * 再生位置スライダーと音量スライダーを短くし、時間表示・速度選択も
+     * 同じ行に収める。画面幅に応じてスライダーだけが伸縮する。
+     */
+    #viewer:not(.video-mode) #audioBar {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 5px !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      padding: 4px 6px !important;
+      margin: 0 !important;
+      overflow: visible !important;
+    }
+    #viewer:not(.video-mode) #audioBar > * {
+      min-width: 0 !important;
+      flex-shrink: 1 !important;
+      box-sizing: border-box !important;
+    }
+    #viewer:not(.video-mode) #back5,
+    #viewer:not(.video-mode) #play,
+    #viewer:not(.video-mode) #pause,
+    #viewer:not(.video-mode) #forward5 {
+      flex: 0 0 auto !important;
+      padding: 5px !important;
+    }
+    #viewer:not(.video-mode) #progress {
+      flex: 1 1 20% !important;
+      width: 20% !important;
+      min-width: 45px !important;
+      max-width: 25vw !important;
+    }
+    #viewer:not(.video-mode) #time {
+      flex: 0 0 auto !important;
+      white-space: nowrap !important;
+      font-size: 12px !important;
+    }
+    #viewer:not(.video-mode) #volume {
+      flex: 0 1 14% !important;
+      width: 14% !important;
+      min-width: 40px !important;
+      max-width: 18vw !important;
+    }
+    #viewer:not(.video-mode) #rate {
+      flex: 0 0 auto !important;
+      width: auto !important;
+      max-width: 62px !important;
+      font-size: 12px !important;
+      padding: 4px !important;
+    }
+    #viewer:not(.video-mode) #autoPlayToggle {
+      flex: 0 0 auto !important;
+      padding: 5px 8px !important;
+      font-size: 12px !important;
+      white-space: nowrap !important;
+    }
     #viewer.image-controls-hidden #title,
     #viewer.image-controls-hidden #audioBar,
     #viewer.image-controls-hidden #pageNavigation,
