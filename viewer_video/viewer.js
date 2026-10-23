@@ -1,42 +1,3 @@
-// デバッグログを画面に表示する（一時的な調査用）
-const debugBox = document.createElement("pre");
-
-debugBox.style.cssText = `
-  position: fixed;
-  left: 5px;
-  bottom: 5px;
-  z-index: 99999;
-  max-width: 95%;
-  max-height: 35%;
-  overflow: auto;
-  background: rgba(0, 0, 0, 0.85);
-  color: #00ff00;
-  font-size: 12px;
-  white-space: pre-wrap;
-  pointer-events: none;
-`;
-
-document.addEventListener("DOMContentLoaded", () => {
-  document.body.appendChild(debugBox);
-});
-
-function debugLog(...args) {
-  const message = args.map((arg) => {
-    if (arg instanceof Error) {
-      return `${arg.name}: ${arg.message}`;
-    }
-    if (typeof arg === "object" && arg !== null) {
-      try {
-        return JSON.stringify(arg);
-      } catch {
-        return String(arg);
-      }
-    }
-    return String(arg);
-  }).join(" ");
-
-  debugBox.textContent += message + "\n";
-}
 const params = new URLSearchParams(window.location.search);
 
 // 読み込む報告書のJSONファイル
@@ -54,7 +15,8 @@ const title = document.getElementById("title");
 const imageStage = document.getElementById("imageStage");
 const video = document.getElementById("video");
 
-// 動画の全画面表示ボタン
+
+ // 動画の全画面表示ボタン
 const videoFullscreenButton =
   document.getElementById("videoFullscreenButton");
 
@@ -65,50 +27,30 @@ if (video && videoFullscreenButton) {
 
   // iPhoneで全画面表示を終了したとき、動画を再開
   video.addEventListener("webkitendfullscreen", () => {
-  debugLog("webkitendfullscreen 発生");
-  debugLog("全画面解除後 paused =", video.paused);
     if (!resumeAfterIOSFullscreen) {
-     debugLog("再開対象ではありません");
-     return;
+      return;
     }
 
     resumeAfterIOSFullscreen = false;
 
     // 全画面表示の終了処理後に再生を再開
-
-setTimeout(() => {
-  debugLog(
-    "再開処理開始: paused =", video.paused,
-    "ended =", video.ended
-  );
-
-  if (video.paused && !video.ended) {
-    debugLog("video.play() を実行します");
-
-    video.play()
-      .then(() => {
-        debugLog(
-          "play() 成功: paused =", video.paused
-        );
-      })
-      .catch((error) => {
-        debugLog("再生再開エラー:", error);
-      });
-  } else {
-    debugLog("再開条件を満たしていません");
-  }
-}, 500);
+    setTimeout(() => {
+      if (video.paused && !video.ended) {
+        video.play().catch((error) => {
+          console.warn(
+            "全画面解除後の再生再開に失敗しました:",
+            error
+          );
+        });
+      }
+    }, 500);
   });
 
+  // 全画面表示ボタンのクリック処理
   videoFullscreenButton.addEventListener("click", async () => {
     try {
       // iPhone向け：動画専用の全画面表示
-videoFullscreenButton.addEventListener("click", async () => {
-  try {
-    debugLog("全画面表示ボタンを押しました");
-    debugLog("全画面表示前 paused =", video.paused);
-
-    // 以下は既存の処理をそのまま残す      if (typeof video.webkitEnterFullscreen === "function") {
+      if (typeof video.webkitEnterFullscreen === "function") {
         resumeAfterIOSFullscreen = !video.paused && !video.ended;
 
         video.webkitEnterFullscreen();
@@ -851,7 +793,6 @@ function loadImageForPage(pageData) {
 
       if (autoPlayEnabled) {
         video.play().catch((error) => {
-   debugLog("再生再開エラー:", error);
          console.warn("動画の自動再生に失敗しました:", error);
         });
       }
