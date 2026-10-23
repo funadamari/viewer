@@ -23,29 +23,52 @@ const videoFullscreenButton =
 // 全画面表示に入る前に再生中だったかを記録
 let resumeAfterIOSFullscreen = false;
 
+// 動画終了後、全画面解除を待って読み込む次ページ
+let pendingIOSFullscreenNextPageIndex = null;
+let reopenIOSFullscreenForNextVideo = false;
+
 if (video && videoFullscreenButton) {
 
-  // iPhoneで全画面表示を終了したとき、動画を再開
-  video.addEventListener("webkitendfullscreen", () => {
-    if (!resumeAfterIOSFullscreen) {
-      return;
+// iPhoneで全画面表示を終了したときの処理
+video.addEventListener("webkitendfullscreen", () => {
+
+  // 動画終了によるページ切り替えの場合
+if (pendingIOSFullscreenNextPageIndex !== null) {
+  const nextIndex = pendingIOSFullscreenNextPageIndex;
+  const nextPage = pages[nextIndex];
+
+  // 次ページが動画なら、全画面表示への復帰を予約
+  reopenIOSFullscreenForNextVideo =
+    !!(nextPage &&
+       (nextPage.type === "video" || nextPage.video));
+
+  pendingIOSFullscreenNextPageIndex = null;
+  resumeAfterIOSFullscreen = false;
+
+  loadPage(nextIndex);
+  return;
+}
+ 
+  // 通常の全画面解除なら、再生中だった動画を再開
+  if (!resumeAfterIOSFullscreen) {
+    return;
+  }
+
+  resumeAfterIOSFullscreen = false;
+
+  // iOS側の全画面終了処理が完了するのを待つ
+  setTimeout(() => {
+    if (video.paused && !video.ended) {
+      video.play().catch((error) => {
+        console.warn(
+          "全画面解除後の再生再開に失敗しました:",
+          error
+        );
+      });
     }
-
-    resumeAfterIOSFullscreen = false;
-
-    // 全画面表示の終了処理後に再生を再開
-    setTimeout(() => {
-      if (video.paused && !video.ended) {
-        video.play().catch((error) => {
-          console.warn(
-            "全画面解除後の再生再開に失敗しました:",
-            error
-          );
-        });
-      }
-    }, 500);
-  });
-
+  }, 500);
+});
+ 
   // 全画面表示ボタンのクリック処理
   videoFullscreenButton.addEventListener("click", async () => {
     try {
@@ -682,19 +705,38 @@ function initializeAudioControls() {
     }
   });
   
-  audio.addEventListener("ended", () => {
-    if (!autoPlayEnabled) {
+video.addEventListener("ended", () => {
+  if (!autoPlayEnabled) {
+    return;
+  }
+
+  if (currentPageIndex < pages.length - 1) {
+    const nextIndex = currentPageIndex + 1;
+
+    // iPhoneのネイティブ全画面表示中なら、
+    // 先に全画面表示を終了する
+    if (
+      video.webkitDisplayingFullscreen &&
+      typeof video.webkitExitFullscreen === "function"
+    ) {
+      pendingIOSFullscreenNextPageIndex = nextIndex;
+
+      // 全画面解除後に古い動画を再開しないようにする
+      resumeAfterIOSFullscreen = false;
+
+      video.webkitExitFullscreen();
       return;
     }
 
-    if (currentPageIndex < pages.length - 1) {
-      loadPage(currentPageIndex + 1);
-    } else {
-      // 最終ページの音声が終わったら自動再生を停止
-      setAutoPlay(false);
-    }
-  });
+    // 全画面表示でなければ、そのまま次ページへ
+    loadPage(nextIndex);
 
+  } else {
+    // 最終ページの動画が終わったら自動再生を停止
+    setAutoPlay(false);
+  }
+});
+ 
   video.addEventListener("ended", () => {
     if (!autoPlayEnabled) {
       return;
@@ -791,11 +833,26 @@ function loadImageForPage(pageData) {
         return;
       }
 
-      if (autoPlayEnabled) {
-        video.play().catch((error) => {
-         console.warn("動画の自動再生に失敗しました:", error);
-        });
+if (autoPlayEnabled) {
+  video.play()
+    .then(() => {
+      if (reopenIOSFullscreenForNextVideo) {
+        reopenIOSFullscreenForNextVideo = false;
+
+        if (typeof video.webkitEnterFullscreen === "function") {
+          video.webkitEnterFullscreen();
+        }
       }
+    })
+    .catch((error) => {
+      reopenIOSFullscreenForNextVideo = false;
+
+      console.warn(
+        "動画の自動再生に失敗しました:",
+        error
+      );
+    });
+}
     };
 
     return; 
