@@ -108,7 +108,7 @@ setTimeout(() => {
   } else {
     debugLog("再開条件を満たしていません");
   }
-}, 150);
+}, 500);
   });
 
   videoFullscreenButton.addEventListener("click", async () => {
