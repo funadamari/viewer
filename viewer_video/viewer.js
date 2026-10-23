@@ -212,7 +212,7 @@ imageControlsStyle.textContent = `
       position: fixed !important;
       left: 0 !important;
       right: 0 !important;
-      bottom: calc(env(safe-area-inset-bottom) + 81px) !important;
+      bottom: calc(env(safe-area-inset-bottom) + 88px) !important;
       top: auto !important;
       height: 42px !important;
       flex: 0 0 42px !important;
