@@ -704,40 +704,9 @@ function initializeAudioControls() {
       video.pause();
     }
   });
-  
-video.addEventListener("ended", () => {
-  if (!autoPlayEnabled) {
-    return;
-  }
 
-  if (currentPageIndex < pages.length - 1) {
-    const nextIndex = currentPageIndex + 1;
-
-    // iPhoneのネイティブ全画面表示中なら、
-    // 先に全画面表示を終了する
-    if (
-      video.webkitDisplayingFullscreen &&
-      typeof video.webkitExitFullscreen === "function"
-    ) {
-      pendingIOSFullscreenNextPageIndex = nextIndex;
-
-      // 全画面解除後に古い動画を再開しないようにする
-      resumeAfterIOSFullscreen = false;
-
-      video.webkitExitFullscreen();
-      return;
-    }
-
-    // 全画面表示でなければ、そのまま次ページへ
-    loadPage(nextIndex);
-
-  } else {
-    // 最終ページの動画が終わったら自動再生を停止
-    setAutoPlay(false);
-  }
-});
- 
-  video.addEventListener("ended", () => {
+  // 音声付き画像：音声終了後に次ページへ進む
+  audio.addEventListener("ended", () => {
     if (!autoPlayEnabled) {
       return;
     }
@@ -745,6 +714,36 @@ video.addEventListener("ended", () => {
     if (currentPageIndex < pages.length - 1) {
       loadPage(currentPageIndex + 1);
     } else {
+      // 最終ページの音声が終わったら自動再生を停止
+      setAutoPlay(false);
+    }
+  });
+
+  // 動画：終了後に次ページへ進む（イベント登録は1回だけ）
+  video.addEventListener("ended", () => {
+    if (!autoPlayEnabled) {
+      return;
+    }
+
+    if (currentPageIndex < pages.length - 1) {
+      const nextIndex = currentPageIndex + 1;
+
+      // iPhoneのネイティブ全画面表示中なら、
+      // 先に全画面表示を終了し、終了イベント後に次ページを読み込む
+      if (
+        video.webkitDisplayingFullscreen &&
+        typeof video.webkitExitFullscreen === "function"
+      ) {
+        pendingIOSFullscreenNextPageIndex = nextIndex;
+        resumeAfterIOSFullscreen = false;
+        video.webkitExitFullscreen();
+        return;
+      }
+
+      // 全画面表示でなければ、そのまま次ページへ
+      loadPage(nextIndex);
+    } else {
+      // 最終ページの動画が終わったら自動再生を停止
       setAutoPlay(false);
     }
   });
