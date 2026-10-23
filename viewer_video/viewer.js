@@ -110,8 +110,89 @@ const pageIndicator = document.getElementById("pageIndicator");
 
 const pageNavigation =
   document.getElementById("pageNavigation");
+const imageControls =
+  document.getElementById("imageControls");
 
 const audioBar = document.getElementById("audioBar");
+
+// スマートフォン横向きの画像ページでは、操作部を自動的に隠して
+// 画像の表示領域を広げる。画像をタップすると一時的に再表示する。
+let imageControlsHideTimer = null;
+const landscapeTouchQuery = window.matchMedia(
+  "(orientation: landscape) and (pointer: coarse)"
+);
+
+function shouldAutoHideImageControls() {
+  return landscapeTouchQuery.matches;
+}
+
+function showImageControlsTemporarily() {
+  const viewer = document.getElementById("viewer");
+  if (!viewer || viewer.classList.contains("video-mode") || !shouldAutoHideImageControls()) {
+    return;
+  }
+
+  viewer.classList.remove("image-controls-hidden");
+  if (imageControlsHideTimer !== null) {
+    clearTimeout(imageControlsHideTimer);
+  }
+  imageControlsHideTimer = setTimeout(() => {
+    hideImageControlsForLandscape();
+  }, 5000);
+}
+
+function hideImageControlsForLandscape() {
+  const viewer = document.getElementById("viewer");
+  if (imageControlsHideTimer !== null) {
+    clearTimeout(imageControlsHideTimer);
+    imageControlsHideTimer = null;
+  }
+  if (
+    viewer &&
+    !viewer.classList.contains("video-mode") &&
+    shouldAutoHideImageControls()
+  ) {
+    viewer.classList.add("image-controls-hidden");
+  }
+}
+
+// 既存のHTMLを変更せず、画像ページの横向き表示用スタイルを追加する。
+const imageControlsStyle = document.createElement("style");
+imageControlsStyle.textContent = `
+  @media (orientation: landscape) and (pointer: coarse) {
+    #viewer.image-controls-hidden #title,
+    #viewer.image-controls-hidden #audioBar,
+    #viewer.image-controls-hidden #pageNavigation,
+    #viewer.image-controls-hidden #imageControls,
+    #viewer.image-controls-hidden #videoFullscreenButton {
+      display: none !important;
+    }
+    #viewer.image-controls-hidden #imageStage {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      height: 100% !important;
+      max-height: 100dvh !important;
+    }
+  }
+`;
+document.head.appendChild(imageControlsStyle);
+
+landscapeTouchQuery.addEventListener("change", () => {
+  const viewer = document.getElementById("viewer");
+  if (!viewer || viewer.classList.contains("video-mode")) {
+    return;
+  }
+  if (shouldAutoHideImageControls()) {
+    hideImageControlsForLandscape();
+  } else {
+    if (imageControlsHideTimer !== null) {
+      clearTimeout(imageControlsHideTimer);
+      imageControlsHideTimer = null;
+    }
+    viewer.classList.remove("image-controls-hidden");
+  }
+});
+
 const audio = document.getElementById("audio");
 const back5Button = document.getElementById("back5");
 const playButton = document.getElementById("play");
@@ -793,6 +874,13 @@ audioBar.style.display =
 function loadImageForPage(pageData) {
   const viewer = document.getElementById("viewer");
 
+  // ページ切り替え時はいったん操作部を表示状態に戻す。
+  if (imageControlsHideTimer !== null) {
+    clearTimeout(imageControlsHideTimer);
+    imageControlsHideTimer = null;
+  }
+  viewer.classList.remove("image-controls-hidden");
+
   // 以前の動画を停止し、動画モードを解除する
   video.pause();
   video.removeAttribute("src");
@@ -857,7 +945,11 @@ if (autoPlayEnabled) {
     return; 
   }
 
-  // 画像ページ
+  // 画像ページ：スマートフォン横向きでは操作部を隠す
+  if (shouldAutoHideImageControls()) {
+    hideImageControlsForLandscape();
+  }
+
   if (!pageData.image) {
     image.style.display = "none";
     return;
@@ -1182,6 +1274,9 @@ tocButton.addEventListener(
 );
 
 imageStage.addEventListener("click", (event) => {
+  // 画像をタップしたら操作部を5秒間表示する。
+  showImageControlsTemporarily();
+
   const tableOfContents =
     document.getElementById("tableOfContents");
 
