@@ -1,4 +1,42 @@
+// デバッグログを画面に表示する（一時的な調査用）
+const debugBox = document.createElement("pre");
 
+debugBox.style.cssText = `
+  position: fixed;
+  left: 5px;
+  bottom: 5px;
+  z-index: 99999;
+  max-width: 95%;
+  max-height: 35%;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.85);
+  color: #00ff00;
+  font-size: 12px;
+  white-space: pre-wrap;
+  pointer-events: none;
+`;
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.body.appendChild(debugBox);
+});
+
+function debugLog(...args) {
+  const message = args.map((arg) => {
+    if (arg instanceof Error) {
+      return `${arg.name}: ${arg.message}`;
+    }
+    if (typeof arg === "object" && arg !== null) {
+      try {
+        return JSON.stringify(arg);
+      } catch {
+        return String(arg);
+      }
+    }
+    return String(arg);
+  }).join(" ");
+
+  debugBox.textContent += message + "\n";
+}
 const params = new URLSearchParams(window.location.search);
 
 // 読み込む報告書のJSONファイル
@@ -27,8 +65,11 @@ if (video && videoFullscreenButton) {
 
   // iPhoneで全画面表示を終了したとき、動画を再開
   video.addEventListener("webkitendfullscreen", () => {
+  debugLog("webkitendfullscreen 発生");
+  debugLog("全画面解除後 paused =", video.paused);
     if (!resumeAfterIOSFullscreen) {
-      return;
+     debugLog("再開対象ではありません");
+     return;
     }
 
     resumeAfterIOSFullscreen = false;
@@ -62,7 +103,12 @@ setTimeout(() => {
   videoFullscreenButton.addEventListener("click", async () => {
     try {
       // iPhone向け：動画専用の全画面表示
-      if (typeof video.webkitEnterFullscreen === "function") {
+videoFullscreenButton.addEventListener("click", async () => {
+  try {
+    debugLog("全画面表示ボタンを押しました");
+    debugLog("全画面表示前 paused =", video.paused);
+
+    // 以下は既存の処理をそのまま残す      if (typeof video.webkitEnterFullscreen === "function") {
         resumeAfterIOSFullscreen = !video.paused && !video.ended;
 
         video.webkitEnterFullscreen();
@@ -805,7 +851,8 @@ function loadImageForPage(pageData) {
 
       if (autoPlayEnabled) {
         video.play().catch((error) => {
-          console.warn("動画の自動再生に失敗しました:", error);
+   debugLog("再生再開エラー:", error);
+         console.warn("動画の自動再生に失敗しました:", error);
         });
       }
     };
