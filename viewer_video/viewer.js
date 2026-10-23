@@ -1,53 +1,4 @@
 
-/* ===== 一時的なデバッグログ表示 ===== */
-const debugBox = document.createElement("pre");
-
-debugBox.style.cssText = `
-  position: fixed;
-  left: 5px;
-  bottom: 5px;
-  z-index: 99999;
-  width: 95%;
-  max-height: 35%;
-  overflow: auto;
-  background: rgba(0, 0, 0, 0.85);
-  color: #00ff00;
-  font-size: 12px;
-  white-space: pre-wrap;
-  pointer-events: none;
-`;
-
-function debugLog(...args) {
-  const message = args.map((arg) => {
-    if (arg instanceof Error) {
-      return `${arg.name}: ${arg.message}`;
-    }
-    if (typeof arg === "object" && arg !== null) {
-      try {
-        return JSON.stringify(arg);
-      } catch {
-        return String(arg);
-      }
-    }
-    return String(arg);
-  }).join(" ");
-
-  debugBox.textContent += message + "\n";
-}
-
-function showDebugBox() {
-  if (!debugBox.isConnected) {
-    document.body.appendChild(debugBox);
-  }
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", showDebugBox);
-} else {
-  showDebugBox();
-}
-/* ===== デバッグログ表示用コードここまで ===== */
-
 const params = new URLSearchParams(window.location.search);
 
 // 読み込む報告書のJSONファイル
@@ -76,9 +27,6 @@ if (video && videoFullscreenButton) {
 
   // iPhoneで全画面表示を終了したとき、動画を再開
   video.addEventListener("webkitendfullscreen", () => {
-  debugLog("webkitendfullscreen 発生");
-  debugLog("全画面解除後 paused =", video.paused);
-
     if (!resumeAfterIOSFullscreen) {
       return;
     }
@@ -113,8 +61,6 @@ setTimeout(() => {
 
   videoFullscreenButton.addEventListener("click", async () => {
     try {
-    debugLog("全画面表示ボタンを押しました");
-    debugLog("全画面表示前 paused =", video.paused);
       // iPhone向け：動画専用の全画面表示
       if (typeof video.webkitEnterFullscreen === "function") {
         resumeAfterIOSFullscreen = !video.paused && !video.ended;
