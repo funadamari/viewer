@@ -177,48 +177,21 @@ imageControlsStyle.textContent = `
       min-height: 0 !important;
       flex: none !important;
     }
-    /* コントロールは画像の上に重ね、表示しても画像領域を縮めない */
-    #viewer:not(.video-mode) #title,
+    /*
+     * コントロールの位置は縦向き時の既存CSSをそのまま使用する。
+     * 横向き専用の top / bottom / left / transform / position 指定は行わず、
+     * 向きを変えても各コントロールの配置を変えない。
+     * 背景だけ透明にし、画像の表示領域を縮めない。
+     */
     #viewer:not(.video-mode) #audioBar,
     #viewer:not(.video-mode) #pageNavigation,
     #viewer:not(.video-mode) #imageControls {
-      position: absolute !important;
-      z-index: 20 !important;
-      box-sizing: border-box !important;
       background: transparent !important;
       background-color: transparent !important;
       box-shadow: none !important;
-    }
-    #viewer:not(.video-mode) #title {
-      top: 4px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      max-width: 80vw !important;
-    }
-    #viewer:not(.video-mode) #audioBar {
-      top: auto !important;
-      bottom: 88px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      max-width: 96vw !important;
-      width: max-content !important;
-    }
-    #viewer:not(.video-mode) #pageNavigation {
-      top: auto !important;
-      bottom: 48px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      max-width: 96vw !important;
-    }
-    #viewer:not(.video-mode) #imageControls {
-      top: auto !important;
-      bottom: 4px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
       max-width: 98vw !important;
-      width: max-content !important;
+      box-sizing: border-box !important;
     }
-    /* ボタン類も透明背景にし、背後の画像を見えるようにする */
     #viewer:not(.video-mode) #audioBar button,
     #viewer:not(.video-mode) #pageNavigation button,
     #viewer:not(.video-mode) #imageControls button {
