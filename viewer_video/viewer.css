@@ -324,8 +324,15 @@ body {
   #title {
     left: 8px;
     top: 8px;
-    right: 170px;
+
+    /* 右側の画像コントロール用に余白を広く確保 */
+    right: 220px;
+    width: auto;
+    max-width: none;
+
     font-size: 13px;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 
