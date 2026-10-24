@@ -1686,6 +1686,75 @@ window.addEventListener(
 );
 
 
+/*
+ * タイトルと画像コントロールの重なりを防ぐ。
+ * コントロールの実際の位置を測定し、タイトルの右端を自動調整する。
+ */
+(function () {
+  const title = document.getElementById("title");
+  const controls = document.getElementById("imageControls");
+  const stage = document.getElementById("imageStage");
+
+  if (!title || !controls || !stage) return;
+
+  const GAP = 10; // タイトルとコントロールの間隔（px）
+
+  function adjustTitleWidth() {
+    const stageRect = stage.getBoundingClientRect();
+    const controlsRect = controls.getBoundingClientRect();
+
+    // コントロールが非表示なら、右側の余白を最小限にする
+    if (
+      getComputedStyle(controls).display === "none" ||
+      controlsRect.width === 0
+    ) {
+      title.style.right = "8px";
+    } else {
+      // imageStage の右端からコントロール左端までの距離を計算
+      const rightSpace =
+        stageRect.right - controlsRect.left + GAP;
+
+      title.style.right = Math.max(8, rightSpace) + "px";
+    }
+
+    // CSSに残っている固定のmax-width指定を解除
+    title.style.maxWidth = "none";
+    title.style.width = "auto";
+    title.style.whiteSpace = "normal";
+    title.style.overflowWrap = "anywhere";
+  }
+
+  // 初回表示
+  requestAnimationFrame(adjustTitleWidth);
+
+  // 画面サイズ・向きの変更に対応
+  window.addEventListener("resize", adjustTitleWidth);
+  window.addEventListener("orientationchange", () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(adjustTitleWidth);
+    });
+  });
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", adjustTitleWidth);
+  }
+
+  // ボタン幅や表示状態が変化した場合にも再計算
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(adjustTitleWidth);
+    observer.observe(controls);
+    observer.observe(stage);
+  }
+
+  // タイトルが変更された場合にも表示領域を更新
+  const titleObserver = new MutationObserver(adjustTitleWidth);
+  titleObserver.observe(title, {
+    childList: true,
+    characterData: true,
+    subtree: true
+  });
+})();
+
 initializeAudioControls();
 
 initializeReport();
