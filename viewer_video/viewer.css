@@ -51,13 +51,24 @@ body {
   position: absolute;
   left: 12px;
   top: 10px;
-  max-width: calc(100% - 220px);
+
+  /* 右側の画像コントロールと重ならない幅に制限 */
+  right: 220px;
+  width: auto;
+  max-width: none;
+
   padding: 5px 9px;
   color: #fff;
   background: rgba(0, 0, 0, 0.55);
   border-radius: 5px;
   font-size: 14px;
   line-height: 1.35;
+
+  /* 長いタイトルを折り返す */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+
   pointer-events: none;
   z-index: 5;
 }
@@ -313,9 +324,10 @@ body {
   #title {
     left: 8px;
     top: 8px;
-    max-width: calc(100% - 170px);
+    right: 170px;
     font-size: 13px;
   }
+}
 
   #imageControls {
     top: 8px;
