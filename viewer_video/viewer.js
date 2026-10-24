@@ -524,6 +524,11 @@ function resetView() {
   imageNaturalWidth = naturalWidth;
   imageNaturalHeight = naturalHeight;
 
+   // 画像要素の表示寸法を実際の画像寸法に合わせる
+  // 拡大率・移動量の計算と、実際の表示寸法を一致させる
+  image.style.width = naturalWidth + "px";
+  image.style.height = naturalHeight + "px";
+
   // 画像全体が表示領域に収まる倍率
   fitScale = Math.min(
     viewport.width / naturalWidth,
