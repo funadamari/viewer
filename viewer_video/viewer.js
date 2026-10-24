@@ -509,19 +509,44 @@ function applyTransform() {
 }
 
 
-function resetView() {
-  fitScale = calculateFitScale();
 
+function resetView() {
+  const viewport = getViewportSize();
+
+  // 読み込み済み画像の実際の寸法を使う
+  const naturalWidth = image.naturalWidth || imageNaturalWidth;
+  const naturalHeight = image.naturalHeight || imageNaturalHeight;
+
+  if (!naturalWidth || !naturalHeight) {
+    return;
+  }
+
+  imageNaturalWidth = naturalWidth;
+  imageNaturalHeight = naturalHeight;
+
+  // 画像全体が表示領域に収まる倍率
+  fitScale = Math.min(
+    viewport.width / naturalWidth,
+    viewport.height / naturalHeight
+  );
+
+  // 初期表示は画面に収まる倍率の90%
   scale = Math.max(
     MIN_SCALE,
     fitScale * INITIAL_SCALE
   );
 
-  translateX = 0;
-  translateY = 0;
+  // 初期表示時の位置を中央に設定
+  translateX = (viewport.width - naturalWidth * scale) / 2;
+  translateY = (viewport.height - naturalHeight * scale) / 2;
 
   clampTranslation();
   applyTransform();
+
+  // 初期表示時のスワイプ判定をリセット
+  pointers.clear();
+  dragging = false;
+  swipeEligible = false;
 }
 
 
