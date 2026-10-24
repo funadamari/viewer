@@ -1414,6 +1414,43 @@ nextPageButton.addEventListener(
   }
 );
 
+// 動画ページ用の左右スワイプ処理
+const viewer = document.getElementById("viewer");
+
+let videoSwipeStartX = 0;
+let videoSwipeStartY = 0;
+let videoSwipeActive = false;
+
+viewer.addEventListener("pointerdown", (event) => {
+  if (!viewer.classList.contains("video-mode")) return;
+  if (event.target.closest("#pageNavigation")) return;
+  if (event.target.closest("#audioBar")) return;
+  if (event.target.closest("#videoFullscreenButton")) return;
+
+  videoSwipeStartX = event.clientX;
+  videoSwipeStartY = event.clientY;
+  videoSwipeActive = true;
+});
+
+viewer.addEventListener("pointerup", (event) => {
+  if (!videoSwipeActive) return;
+  videoSwipeActive = false;
+
+  const dx = event.clientX - videoSwipeStartX;
+  const dy = event.clientY - videoSwipeStartY;
+
+  if (
+    Math.abs(dx) >= 60 &&
+    Math.abs(dx) > Math.abs(dy) * 1.3
+  ) {
+    navigatePage(dx < 0 ? 1 : -1);
+  }
+});
+
+viewer.addEventListener("pointercancel", () => {
+  videoSwipeActive = false;
+});
+
 // ページナビゲーション全体で
 // ダブルクリック／ダブルタップによるブラウザ拡大を防止
 pageNavigation.addEventListener(
