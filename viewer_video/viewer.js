@@ -1068,6 +1068,16 @@ function loadImageForPage(pageData) {
     imageControlsHideTimer = null;
   }
   viewer.classList.remove("image-controls-hidden");
+ 
+  // ページ切り替え時に前ページの操作状態をリセットする
+  pointers.clear();
+  dragging = false;
+  swipeEligible = false;
+
+  // 前ページの拡大率・移動量をいったん初期化する
+  scale = INITIAL_SCALE;
+  translateX = 0;
+  translateY = 0;
 
   // 以前の動画を停止し、動画モードを解除する
   video.pause();
