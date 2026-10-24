@@ -1,0 +1,708 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+body {
+  font-family: Arial, "Noto Sans JP", sans-serif;
+}
+
+#viewer {
+  position: fixed;
+  inset: 0;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  color: #fff;
+  overflow: hidden;
+}
+
+#imageStage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+  touch-action: none;
+}
+
+#image {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  max-height: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform-origin: 0 0;
+  touch-action: none;
+}
+
+#title {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  max-width: calc(100% - 220px);
+  padding: 5px 9px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 1.35;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* 目次 */
+#tableOfContents {
+  position: absolute;
+  top: 50px;
+  right: 8px;
+  width: min(30vw, 360px);
+  min-width: 220px;
+  max-width: calc(100% - 16px);
+  max-height: calc(100% - 60px);
+
+  display: none;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
+
+  background: rgba(20, 20, 20, 0.96);
+  border: 1px solid #555;
+  border-radius: 6px;
+
+  z-index: 30;
+}
+#tableOfContents .tocItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 8px 0;
+  padding: 5px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background: #2c2c2c;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+
+/* 目次サムネイルの共通領域 */
+#tableOfContents .tocThumbnailContainer {
+  position: relative;
+  display: block;
+  width: 25%;
+  max-width: 120px;
+  flex: 0 0 25%;
+  min-width: 0;
+  overflow: hidden;
+  background: #444;
+  line-height: 1;
+}
+
+/* サムネイル画像 */
+#tableOfContents .tocThumbnailContainer img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* 動画サムネイルがない場合の表示領域 */
+#tableOfContents .tocThumbnailContainer.hasVideo {
+  aspect-ratio: 4 / 3;
+}
+
+/* 動画サムネイル画像がある場合も領域いっぱいに表示 */
+#tableOfContents .tocThumbnailContainer.hasVideo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 動画の再生マーク：中央 */
+#tableOfContents .tocVideoIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  padding-left: 3px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* 音声マーク：右下 */
+#tableOfContents .tocAudioIcon {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ページタイトルだけに適用する */
+#tableOfContents .tocItem > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+#tableOfContents .tocItem:hover {
+  background: #444;
+}
+
+#tableOfContents .tocItem.current {
+  border-color: #aaa;
+  background: #444;
+}
+
+/* 画像操作と終了ボタンは常に右上 */
+#imageControls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+}
+
+#imageControls button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 5px;
+  background: rgba(35, 35, 35, 0.82);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#imageControls button:hover {
+  background: rgba(80, 80, 80, 0.9);
+}
+
+#imageControls #closeButton {
+  font-size: 22px;
+  margin-left: 0;
+  order: 3;
+}
+
+#imageControls #tocButton {
+  order: 1;
+}
+
+#imageControls #helpButton {
+  order: 2;
+}
+
+/* 音声コントロールは画面最下段 */
+#audioBar {
+  flex: 0 0 54px;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  background: rgba(24, 24, 24, 0.98);
+  border-top: 1px solid #444;
+  z-index: 20;
+  touch-action: manipulation;
+}
+
+#audioBar button {
+  flex: 0 0 31px;
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background: #2c2c2c;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#audioBar button:hover {
+  background: #444;
+}
+
+#audioBar input[type="range"] {
+  accent-color: #bbb;
+  cursor: pointer;
+}
+
+#progress {
+  flex: 1 1 auto;
+  min-width: 80px;
+}
+
+#time {
+  flex: 0 0 auto;
+  min-width: 76px;
+  text-align: center;
+  font-size: 11px;
+  white-space: nowrap;
+  color: #ddd;
+}
+
+.volumeIcon {
+  flex: 0 0 auto;
+  font-size: 15px;
+  line-height: 1;
+}
+
+#volume {
+  flex: 0 1 90px;
+  min-width: 45px;
+}
+
+#rate {
+  flex: 0 0 auto;
+  height: 30px;
+  padding: 0 5px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background: #2c2c2c;
+  color: #fff;
+  font-size: 11px;
+}
+
+/* スマートフォン */
+@media (max-width: 768px) {
+  #title {
+    left: 8px;
+    top: 8px;
+    max-width: calc(100% - 170px);
+    font-size: 13px;
+  }
+
+  #imageControls {
+    top: 8px;
+    right: 8px;
+  }
+
+  #imageControls button {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  #imageControls #closeButton {
+    font-size: 23px;
+  }
+
+  #audioBar {
+    flex: 0 0 auto;
+    min-height: 96px;
+    display: grid;
+    grid-template-columns: 34px 34px 34px 34px 1fr auto;
+    grid-template-rows: 38px 38px;
+    column-gap: 5px;
+    row-gap: 4px;
+    padding: 6px 8px;
+    touch-action: manipulation;
+  }
+
+  #audioBar button {
+    width: 34px;
+    height: 34px;
+  }
+
+  #back5 {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #play {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  #pause {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  #forward5 {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  #progress {
+    grid-column: 5 / 7;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  #time {
+    grid-column: 1 / 4;
+    grid-row: 2;
+    min-width: 0;
+    text-align: left;
+    align-self: center;
+  }
+
+  .volumeIcon {
+    grid-column: 4;
+    grid-row: 2;
+    align-self: center;
+    justify-self: end;
+  }
+
+  #volume {
+    grid-column: 5;
+    grid-row: 2;
+    min-width: 45px;
+    width: 100%;
+    touch-action: pan-x;
+  }
+  
+  #rate {
+    grid-column: 6;
+    grid-row: 2;
+    height: 30px;
+    max-width: 65px;
+  }
+
+  #pageNavigation {
+    height: 42px;
+    flex-basis: 42px;
+    gap: 12px;
+  }
+
+  #pageNavigation button {
+    min-width: 76px;
+    height: 30px;
+    font-size: 13px;
+    touch-action: none;
+  }
+
+  #pageIndicator {
+    min-width: 52px;
+    font-size: 13px;
+  }  
+}
+
+#pageNavigation {
+  height: 46px;
+  flex: 0 0 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+
+  background: #111;
+  touch-action: none;
+}
+
+#pageNavigation button {
+  min-width: 90px;
+  height: 32px;
+
+  border: none;
+  border-radius: 4px;
+
+  background: #333;
+  color: white;
+
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#pageNavigation button:hover {
+  background: #444;
+}
+
+#pageNavigation button[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#pageIndicator {
+  min-width: 60px;
+  text-align: center;
+  color: white;
+  font-size: 14px;
+}
+
+
+/* 自動再生スイッチ */
+#autoPlayToggle {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 100px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #777;
+  border-radius: 5px;
+  background: #333;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#autoPlayToggle[aria-pressed="true"] {
+  background: #276749;
+  border-color: #48a878;
+}
+
+/* スマートフォンでは自動再生ボタンを3段目に配置 */
+@media (max-width: 768px) {
+  #audioBar {
+    min-height: 132px;
+    grid-template-rows: 38px 38px 34px;
+  }
+
+  #autoPlayToggle {
+    grid-column: 1 / 7;
+    grid-row: 3;
+    justify-self: center;
+    align-self: center;
+    min-width: 120px;
+  }
+}
+  
+/* 操作ガイドボタン */
+#imageControls #helpButton {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+/* 操作ガイドの背景 */
+#helpOverlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 9999;
+  touch-action: auto;
+}
+
+#helpPanel {
+  box-sizing: border-box;
+  width: 520px;
+  max-width: 100%;  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 24px;
+  background: #ffffff;
+  color: #222222;
+  border: 2px solid #bdbdbd;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  line-height: 1.6;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+  
+#helpHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+#helpHeading {
+  margin: 0;
+  font-size: 20px;
+}
+
+#helpClose {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+#helpPanel section {
+  margin-top: 14px;
+}
+
+#helpPanel h3 {
+  margin: 0 0 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #ccc;
+  font-size: 15px;
+}
+
+#helpPanel ul {
+  margin: 5px 0;
+  padding-left: 1.4em;
+}
+
+#helpPanel li {
+  margin: 3px 0;
+}
+
+#helpPanel .helpNote {
+  margin: 8px 0 0;
+  color: #555;
+  font-size: 12px;
+}
+
+/* スマートフォン */
+@media (max-width: 768px) {
+  #helpOverlay {
+    padding: 10px;
+  }
+
+  #helpPanel {
+    padding: 12px 15px;
+    font-size: 13px;
+  }
+
+  #helpHeading {
+    font-size: 18px;
+  }
+
+  #helpPanel section {
+    margin-top: 10px;
+  }
+
+  #helpPanel h3 {
+    font-size: 14px;
+  }
+}
+/* 動画ページ */
+#video {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  z-index: 1;
+}
+
+/* 動画表示中は画像用の拡大縮小ボタンを隠す */
+#viewer.video-mode #zoomIn,
+#viewer.video-mode #zoomOut,
+#viewer.video-mode #resetView {
+  display: none;
+}
+
+/* 動画表示中は画像操作用のタッチ制御を解除 */
+#viewer.video-mode #imageStage {
+  touch-action: auto;
+}
+
+/* 動画表示中は音声専用コントロールを隠し、
+   自動再生ボタンだけを残す */
+#viewer.video-mode #audioBar > :not(#autoPlayToggle) {
+  display: none;
+}
+
+#viewer.video-mode #audioBar {
+  display: flex;
+  flex: 0 0 54px;
+  min-height: 54px;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  #viewer.video-mode #audioBar {
+    display: flex;
+    flex: 0 0 54px;
+    min-height: 54px;
+    padding: 6px 8px;
+  }
+}
+#tableOfContents .tocVideoIcon {
+  display: flex;
+  flex: 0 0 25%;
+  max-width: 120px;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  background: #111;
+}
+
+/* 全画面表示ボタン：既存のアイコンと統一 */
+#imageControls #videoFullscreenButton {
+  display: none;
+  order: 0;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 5px;
+  background: rgba(35, 35, 35, 0.82);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* タッチ操作主体の端末では、動画表示中に表示 */
+@media (hover: none) and (pointer: coarse) {
+  #viewer.video-mode #imageControls #videoFullscreenButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* 動画表示中は全画面表示・ガイド・閉じるを表示。
+   目次ボタンは必要に応じて表示する既存仕様を維持 */
+#imageControls #videoFullscreenButton:hover {
+  background: rgba(80, 80, 80, 0.9);
+}
