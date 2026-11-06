@@ -939,6 +939,7 @@ function setAutoPlay(enabled) {
   }
 }
 
+
 async function playCurrentAudio() {
   if (!autoPlayEnabled || !audio.src) {
     return;
@@ -950,6 +951,9 @@ async function playCurrentAudio() {
     }
 
     if (autoPlayEnabled) {
+      // 現在選択されている再生速度を新しい音声にも適用
+      audio.playbackRate = Number(rate.value);
+
       await audio.play();
     }
   } catch (error) {
