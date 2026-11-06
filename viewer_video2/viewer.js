@@ -400,6 +400,67 @@ let audioContext = null;
 let gainNode = null;
 let audioSource = null;
 
+
+// ========================================
+// 画面消灯抑止（Screen Wake Lock API）
+// ========================================
+
+let screenWakeLock = null;
+
+// 画面消灯抑止を取得
+async function requestScreenWakeLock() {
+  if (!("wakeLock" in navigator)) {
+    console.warn("Screen Wake Lock APIに対応していません。");
+    return;
+  }
+
+  if (document.visibilityState !== "visible") {
+    return;
+  }
+
+  // すでに取得済みなら何もしない
+  if (screenWakeLock && !screenWakeLock.released) {
+    return;
+  }
+
+  try {
+    screenWakeLock = await navigator.wakeLock.request("screen");
+
+    console.log("画面消灯抑止を開始しました。");
+
+    screenWakeLock.addEventListener("release", () => {
+      console.log("画面消灯抑止が解除されました。");
+      screenWakeLock = null;
+    });
+
+  } catch (error) {
+    console.warn("画面消灯抑止を取得できませんでした:", error);
+    screenWakeLock = null;
+  }
+}
+
+// 画面消灯抑止を解除
+async function releaseScreenWakeLock() {
+  if (screenWakeLock) {
+    try {
+      await screenWakeLock.release();
+    } catch (error) {
+      console.warn("画面消灯抑止の解除に失敗しました:", error);
+    }
+
+    screenWakeLock = null;
+  }
+}
+
+// viewerが再び前面に表示されたときに再取得
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    if (autoPlayEnabled) {
+      requestScreenWakeLock();
+    }
+  }
+});
+
 function initializeAudioVolume() {
   try {
     audioContext = new (
@@ -855,6 +916,7 @@ function seekBy(seconds) {
 }
 
 
+
 function setAutoPlay(enabled) {
   autoPlayEnabled = enabled;
 
@@ -868,6 +930,13 @@ function setAutoPlay(enabled) {
 
   autoPlayToggle.title =
     enabled ? "自動再生を停止" : "自動再生を開始";
+
+  // 画面消灯抑止を自動再生と連動
+  if (enabled) {
+    requestScreenWakeLock();
+  } else {
+    releaseScreenWakeLock();
+  }
 }
 
 async function playCurrentAudio() {
@@ -1556,6 +1625,8 @@ document.addEventListener("keydown", (event) => {
 closeButton.addEventListener(
   "click",
   () => {
+    releaseScreenWakeLock();
+
     try {
       window.close();
     } catch (error) {
@@ -1563,7 +1634,6 @@ closeButton.addEventListener(
     }
   }
 );
-
 
 imageStage.addEventListener(
   "pointerdown",
